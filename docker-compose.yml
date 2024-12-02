@@ -12,10 +12,10 @@ services:
     ports:
       - 7865:7865
     # only uncomment code below if you have an nvidia gpu compatible with cuda
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]

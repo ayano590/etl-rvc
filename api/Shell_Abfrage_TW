@@ -1,0 +1,17 @@
+# Definiere die Client-ID und das Client-Secret
+$client_id = "tb5e6sfh4ip5qboau88dk0lzh19fgb"
+$client_secret = "bbfjazrpsqgzpbpk5f3ylpoeldwgd1"
+
+# Definiere die URL und die POST-Daten
+$url = "https://id.twitch.tv/oauth2/token"
+$body = @{
+    client_id     = $client_id
+    client_secret = $client_secret
+    grant_type    = "client_credentials"
+}
+
+# Sende die POST-Anfrage und hole das OAuth-Token
+$response = Invoke-RestMethod -Uri $url -Method Post -ContentType "application/x-www-form-urlencoded" -Body $body
+
+# Ausgabe des Tokens
+$response.access_token

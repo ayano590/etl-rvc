@@ -1,10 +1,7 @@
 import requests
 import subprocess
 import os
-
-# Twitch API Zugangsdaten
-client_id = 'tb5e6sfh4ip5qboau88dk0lzh19fgb'
-oauth_token = 'x1rpjkpms3ayndwupflg6i8wi7qxks'
+from config_tw import client_id, oauth_token
 
 # Streamer-Name als Parameter
 streamer_name = input("Geben Sie den Namen des Streamers ein: ").strip()

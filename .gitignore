@@ -7,6 +7,11 @@ tools/aria2c/
 tools/flag.txt
 /configs/config.json
 
+# Kavian
+/api/.idea
+/api/api_tw_dload.py
+/api/shell_request_tw
+
 # large untracked files
 /runtime
 /assets

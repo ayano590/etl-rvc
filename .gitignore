@@ -9,6 +9,7 @@ tools/flag.txt
 # large untracked files
 /runtime
 /assets
+/audios
 ffmpeg.exe
 ffprobe.exe
 

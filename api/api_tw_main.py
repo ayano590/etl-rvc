@@ -28,7 +28,7 @@ user_id = user_data['data'][0]['id']
 streamer_display_name = user_data['data'][0]['display_name']
 
 # Videos des Streamers abrufen
-videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first=5')
+videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first=30')
 if not videos_data['data']:
     print(f"Keine Videos für den Streamer '{streamer_display_name}' gefunden.")
     exit()
@@ -41,13 +41,15 @@ for i, video in enumerate(videos_data['data'], start=1):
     url = video['url']
     duration = video['duration']
     video_key = url.split("/")[-1]
+    published_at = video.get('published_at', 'N/A')
 
     print(f"{i}. Titel: {title}")
     print(f"   URL: {url}")
     print(f"   Video_key: {video_key}")
     print(f"   Länge: {duration}")
+    print(f"   Veröffentlicht am: {published_at}")
     print(f"   Streamer: {streamer_display_name}")
-    video_choices.append((title, url, video_key, duration))
+    video_choices.append((title, url, video_key, duration, published_at))
     print()
 
 # Benutzer wählt ein Video aus
@@ -57,7 +59,7 @@ if choice < 1 or choice > len(video_choices):
     exit()
 
 selected_video = video_choices[choice - 1]
-video_title, video_url, video_key, video_duration = selected_video
+video_title, video_url, video_key, video_duration, video_published_at = selected_video
 
 # Zielordner definieren
 output_folder = "downloads/twitch_clips"
@@ -65,7 +67,13 @@ os.makedirs(output_folder, exist_ok=True)
 
 # Dateiname erstellen
 sanitized_title = "".join(c if c.isalnum() or c in (" ", "-", "_") else "_" for c in video_title)
-output_filename = f"{video_key}_{streamer_display_name}_{video_duration.replace(':', '-')}.mp4"
+sanitized_published_at = video_published_at.replace(":", "-").replace("T", "_").replace("Z", "")
+output_filename = f"{video_key}_{streamer_display_name}_{video_duration.replace(':', '-')}_{sanitized_published_at}.mp4"
+
+# Prüfen auf fehlende Daten
+if not all([video_key, sanitized_title, sanitized_published_at]):
+    output_filename = f"INCOM_{output_filename}"
+
 output_path = os.path.join(output_folder, output_filename)
 
 # Video herunterladen

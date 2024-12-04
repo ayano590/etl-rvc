@@ -769,15 +769,78 @@ def change_f0_method(f0method8):
     return {"visible": visible, "__type__": "update"}
 
 
-with gr.Blocks(title="RVC WebUI") as app:
-    gr.Markdown("## RVC WebUI")
-    gr.Markdown(
-        value=i18n(
-            "本软件以MIT协议开源, 作者不对软件具备任何控制力, 使用软件者、传播软件导出的声音者自负全责. <br>如不认可该条款, 则不能使用或引用软件包内任何代码和文件. 详见根目录<b>LICENSE</b>."
-        )
-    )
+# Web UI
+with gr.Blocks(title="VO.CODER") as app:
+    gr.Markdown("## VO.CODER")
     with gr.Tabs():
-        with gr.TabItem(i18n("模型推理")):
+        with gr.TabItem("Stream/Audiobook"):
+            with gr.TabItem("Twitch"):
+                with gr.Row():
+                    sid0 = gr.Textbox(
+                                    label="Enter streamer name:",
+                                    placeholder="Olaf Piltz",
+                    )
+                    refresh_button = gr.Button("Search", variant="secondary")
+                    spk_item = gr.Slider(
+                        minimum=0,
+                        maximum=2333,
+                        step=1,
+                        label=i18n("请选择说话人id"),
+                        value=0,
+                        visible=False,
+                        interactive=True,
+                    )
+                with gr.Row():
+                    xxx1 = gr.Radio(
+                            label="Select clip:",
+                            choices=["1", "2", "3", "4", "5"],
+                            value="1",
+                            interactive=True,
+                        )
+                    xxx2 = gr.Button("Extract", variant="primary")
+                    xxx3 = gr.Slider(
+                        minimum=0,
+                        maximum=2333,
+                        step=1,
+                        label=i18n("请选择说话人id"),
+                        value=0,
+                        visible=False,
+                        interactive=True,
+                    )
+            with gr.TabItem("LibriVox"):
+                with gr.Row():
+                    sid0 = gr.Textbox(
+                                    label="Enter audiobook name:",
+                                    placeholder="The Amazing Saga of Olaf Piltz",
+                    )
+                    refresh_button = gr.Button("Search", variant="secondary")
+                    spk_item = gr.Slider(
+                        minimum=0,
+                        maximum=2333,
+                        step=1,
+                        label=i18n("请选择说话人id"),
+                        value=0,
+                        visible=False,
+                        interactive=True,
+                    )
+                with gr.Row():
+                    xxx4 = gr.Radio(
+                            label="Select clip:",
+                            choices=["1", "2", "3", "4", "5"],
+                            value="1",
+                            interactive=True,
+                        )
+                    xxx5 = gr.Button("Extract", variant="primary")
+                    xxx6 = gr.Slider(
+                        minimum=0,
+                        maximum=2333,
+                        step=1,
+                        label=i18n("请选择说话人id"),
+                        value=0,
+                        visible=False,
+                        interactive=True,
+                    )
+        with gr.TabItem("Model Inference"):
             with gr.Row():
                 sid0 = gr.Dropdown(label=i18n("推理音色"), choices=sorted(names))
                 with gr.Column():
@@ -881,11 +944,6 @@ with gr.Blocks(title="RVC WebUI") as app:
                                 outputs=[sid0, file_index2],
                                 api_name="infer_refresh",
                             )
-                            # file_big_npy1 = gr.Textbox(
-                            #     label=i18n("特征文件路径"),
-                            #     value="E:\\codes\py39\\vits_vc_gpu_train\\logs\\mi-test-1key\\total_fea.npy",
-                            #     interactive=True,
-                            # )
                 with gr.Group():
                     with gr.Column():
                         but0 = gr.Button(i18n("转换"), variant="primary")
@@ -903,7 +961,6 @@ with gr.Blocks(title="RVC WebUI") as app:
                                 f0method0,
                                 file_index1,
                                 file_index2,
-                                # file_big_npy1,
                                 index_rate1,
                                 filter_radius0,
                                 resample_sr0,
@@ -956,11 +1013,6 @@ with gr.Blocks(title="RVC WebUI") as app:
                             outputs=file_index4,
                             api_name="infer_refresh_batch",
                         )
-                        # file_big_npy2 = gr.Textbox(
-                        #     label=i18n("特征文件路径"),
-                        #     value="E:\\codes\\py39\\vits_vc_gpu_train\\logs\\mi-test-1key\\total_fea.npy",
-                        #     interactive=True,
-                        # )
 
                     with gr.Column():
                         resample_sr1 = gr.Slider(
@@ -1027,7 +1079,6 @@ with gr.Blocks(title="RVC WebUI") as app:
                             f0method1,
                             file_index3,
                             file_index4,
-                            # file_big_npy2,
                             index_rate2,
                             filter_radius1,
                             resample_sr1,
@@ -1044,7 +1095,7 @@ with gr.Blocks(title="RVC WebUI") as app:
                     outputs=[spk_item, protect0, protect1, file_index2, file_index4],
                     api_name="infer_change_voice",
                 )
-        with gr.TabItem(i18n("伴奏人声分离&去混响&去回声")):
+        with gr.TabItem("Vocals Preprocessing"):
             with gr.Group():
                 gr.Markdown(
                     value=i18n(
@@ -1099,7 +1150,7 @@ with gr.Blocks(title="RVC WebUI") as app:
                         [vc_output4],
                         api_name="uvr_convert",
                     )
-        with gr.TabItem(i18n("训练")):
+        with gr.TabItem("Model Training"):
             gr.Markdown(
                 value=i18n(
                     "step1: 填写实验配置. 实验数据放在logs下, 每个实验一个文件夹, 需手工输入实验名路径, 内含实验配置, 日志, 训练得到的模型文件. "
@@ -1340,8 +1391,7 @@ with gr.Blocks(title="RVC WebUI") as app:
                         info3,
                         api_name="train_start_all",
                     )
-
-        with gr.TabItem(i18n("ckpt处理")):
+        with gr.TabItem("ckpt Processing"):
             with gr.Group():
                 gr.Markdown(value=i18n("模型融合, 可用于测试音色融合"))
                 with gr.Row():
@@ -1480,8 +1530,7 @@ with gr.Blocks(title="RVC WebUI") as app:
                     info7,
                     api_name="ckpt_extract",
                 )
-
-        with gr.TabItem(i18n("Onnx导出")):
+        with gr.TabItem("Export ONNX"):
             with gr.Row():
                 ckpt_dir = gr.Textbox(label=i18n("RVC模型路径"), value="", interactive=True)
             with gr.Row():
@@ -1495,16 +1544,10 @@ with gr.Blocks(title="RVC WebUI") as app:
             butOnnx.click(
                 export_onnx, [ckpt_dir, onnx_dir], infoOnnx, api_name="export_onnx"
             )
-
-        tab_faq = i18n("常见问题解答")
-        with gr.TabItem(tab_faq):
+        with gr.TabItem("FAQ (Frequently Asked Questions)"):
             try:
-                if tab_faq == "常见问题解答":
-                    with open("docs/cn/faq.md", "r", encoding="utf8") as f:
-                        info = f.read()
-                else:
-                    with open("docs/en/faq_en.md", "r", encoding="utf8") as f:
-                        info = f.read()
+                with open("docs/cn/faq_en.md", "r", encoding="utf8") as f:
+                    info = f.read()
                 gr.Markdown(value=info)
             except:
                 gr.Markdown(traceback.format_exc())

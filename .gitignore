@@ -11,12 +11,14 @@ tools/flag.txt
 /api/.idea
 /api/api_tw_dload.py
 /api/shell_request_tw
+/api/__pycache__
+/api/downloads
 
 # large untracked files
 /runtime
 /assets
 /audios
-/api/downloads
+/dataset
 ffmpeg.exe
 ffprobe.exe
 

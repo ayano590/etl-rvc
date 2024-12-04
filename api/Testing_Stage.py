@@ -1,85 +1,88 @@
 import requests
-import subprocess
 import os
-from config_tw import client_id, oauth_token
 
-# Streamer-Name als Parameter
-streamer_name = input("Geben Sie den Namen des Streamers ein: ").strip()
 
-# Funktion zum Abrufen von Daten von einer URL
-def get_data_from_url(url):
-    response = requests.get(url, headers={
-        'Client-ID': client_id,
-        'Authorization': f'Bearer {oauth_token}'
-    })
-    if response.status_code == 200:
-        return response.json()
+# Funktion: Suche nach Hörbüchern in LibriVox
+def search_librivox_books(title=None, author=None, genre=None, language=None, format="json", extended=1):
+    base_url = "https://librivox.org/api/feed/audiobooks/"
+    params = {
+        "title": title,
+        "author": author,
+        "genre": genre,
+        "language": language,
+        "format": format,
+        "extended": extended
+    }
+
+    try:
+        response = requests.get(base_url, params=params)
+        print(f"Request URL: {response.url}")  # Debugging-Ausgabe der URL
+        response.raise_for_status()
+        return response.json() if format == "json" else response.text
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
+# Funktion: Audiodateien von LibriVox herunterladen
+def download_librivox_audio(book_id, save_path="./audiobooks"):
+    base_url = f"https://librivox.org/api/feed/audiobooks/?id={book_id}&format=json"
+
+    try:
+        response = requests.get(base_url)
+        response.raise_for_status()
+        book_data = response.json()
+
+        if 'books' in book_data and book_data['books']:
+            book = book_data['books'][0]  # Nehme das erste Buch (bei ID ist es eindeutig)
+            title = book.get('title', 'unknown_title')
+            language = book.get('language', 'unknown_language')
+            zip_url = book.get('url_zip_file')
+
+            print(f"Selected Book: {title} (Language: {language})")
+
+            if zip_url:
+                # Erstelle den Zielordner, falls er nicht existiert
+                os.makedirs(save_path, exist_ok=True)
+
+                # Lade die ZIP-Datei herunter
+                zip_path = os.path.join(save_path, f"{title}.zip")
+                print(f"Downloading '{title}'...")
+                with requests.get(zip_url, stream=True) as zip_response:
+                    zip_response.raise_for_status()
+                    with open(zip_path, "wb") as zip_file:
+                        for chunk in zip_response.iter_content(chunk_size=8192):
+                            zip_file.write(chunk)
+                print(f"Downloaded: {zip_path}")
+            else:
+                print("No downloadable audio file found for this book.")
+        else:
+            print("No book data found for the provided ID.")
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+
+
+# Hauptprogramm
+if __name__ == "__main__":
+    # Schritt 1: Suche nach Hörbüchern
+    books = search_librivox_books(format="json", extended=1)
+    if books and "books" in books:
+        print("\nAvailable Books:\n")
+        for i, book in enumerate(books.get("books", []), start=1):
+            title = book.get("title", "No title")
+            language = book.get("language", "Unknown")
+            book_id = book.get("id")
+            print(f"{i}. Title: {title}, Language: {language}, ID: {book_id}")
+
+        # Schritt 2: Benutzer wählt ein Buch aus
+        try:
+            choice = int(input("\nEnter the number of the book you want to download: ")) - 1
+            selected_book = books['books'][choice]
+            book_id = selected_book['id']
+
+            # Schritt 3: Lade Audiodateien des ausgewählten Buches herunter
+            download_librivox_audio(book_id)
+        except (IndexError, ValueError):
+            print("Invalid selection.")
     else:
-        print(f"Fehler beim Abrufen von Daten: {response.status_code}, {response.text}")
-        exit()
-
-# Benutzer-ID abrufen
-user_data = get_data_from_url(f'https://api.twitch.tv/helix/users?login={streamer_name}')
-if not user_data['data']:
-    print(f"Fehler: Kein Benutzer mit dem Namen '{streamer_name}' gefunden.")
-    exit()
-
-user_id = user_data['data'][0]['id']
-streamer_display_name = user_data['data'][0]['display_name']
-
-# Videos des Streamers abrufen
-videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first=5')
-if not videos_data['data']:
-    print(f"Keine Videos für den Streamer '{streamer_display_name}' gefunden.")
-    exit()
-
-# Videos anzeigen
-print("\nDie ersten 5 Videos und ihre Details:")
-video_choices = []
-for i, video in enumerate(videos_data['data'], start=1):
-    title = video['title']
-    url = video['url']
-    duration = video['duration']
-    video_key = url.split("/")[-1]
-    published_at = video.get('published_at', 'N/A')
-
-    print(f"{i}. Titel: {title}")
-    print(f"   URL: {url}")
-    print(f"   Video_key: {video_key}")
-    print(f"   Länge: {duration}")
-    print(f"   Veröffentlicht am: {published_at}")
-    print(f"   Streamer: {streamer_display_name}")
-    video_choices.append((title, url, video_key, duration, published_at))
-    print()
-
-# Benutzer wählt ein Video aus
-choice = int(input(f"Wählen Sie ein Video (1-{len(video_choices)}): ").strip())
-if choice < 1 or choice > len(video_choices):
-    print("Ungültige Auswahl. Programm wird beendet.")
-    exit()
-
-selected_video = video_choices[choice - 1]
-video_title, video_url, video_key, video_duration, video_published_at = selected_video
-
-# Zielordner definieren
-output_folder = "downloads/twitch_clips"
-os.makedirs(output_folder, exist_ok=True)
-
-# Dateiname erstellen
-sanitized_title = "".join(c if c.isalnum() or c in (" ", "-", "_") else "_" for c in video_title)
-sanitized_published_at = video_published_at.replace(":", "-").replace("T", "_").replace("Z", "")
-output_filename = f"{video_key}_{streamer_display_name}_{video_duration.replace(':', '-')}_{sanitized_published_at}.mp4"
-
-# Prüfen auf fehlende Daten
-if not all([video_key, sanitized_title, sanitized_published_at]):
-    output_filename = f"INCOM_{output_filename}"
-
-output_path = os.path.join(output_folder, output_filename)
-
-# Video herunterladen
-print(f"\nHerunterladen von: {video_title}")
-try:
-    subprocess.run(["yt-dlp", video_url, "-o", output_path], check=True)
-    print(f"Video erfolgreich heruntergeladen und gespeichert in: {output_path}")
-except subprocess.CalledProcessError as e:
-    print("Fehler beim Herunterladen:", e)
+        print("No books found.")

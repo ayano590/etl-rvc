@@ -144,6 +144,12 @@ for name in os.listdir(weight_uvr5_root):
     if name.endswith(".pth") or "onnx" in name:
         uvr5_names.append(name.replace(".pth", ""))
 
+xxx10 = "Not loaded"
+
+
+def xxx9():
+    # xxx10 = "Successfully downloaded"
+    return xxx10
 
 def change_choices():
     names = []
@@ -780,65 +786,51 @@ with gr.Blocks(title="VO.CODER") as app:
                                     label="Enter streamer name:",
                                     placeholder="Olaf Piltz",
                     )
-                    refresh_button = gr.Button("Search", variant="secondary")
-                    spk_item = gr.Slider(
-                        minimum=0,
-                        maximum=2333,
-                        step=1,
-                        label=i18n("请选择说话人id"),
-                        value=0,
-                        visible=False,
-                        interactive=True,
-                    )
+                    xxx1 = gr.Button("Search", variant="secondary")
                 with gr.Row():
-                    xxx1 = gr.Radio(
+                    xxx2 = gr.Radio(
                             label="Select clip:",
                             choices=["1", "2", "3", "4", "5"],
                             value="1",
                             interactive=True,
                         )
-                    xxx2 = gr.Button("Extract", variant="primary")
-                    xxx3 = gr.Slider(
-                        minimum=0,
-                        maximum=2333,
-                        step=1,
-                        label=i18n("请选择说话人id"),
-                        value=0,
-                        visible=False,
-                        interactive=True,
-                    )
+                    xxx3 = gr.Button("Download", variant="primary")
             with gr.TabItem("LibriVox"):
                 with gr.Row():
-                    sid0 = gr.Textbox(
-                                    label="Enter audiobook name:",
-                                    placeholder="The Amazing Saga of Olaf Piltz",
-                    )
+                    with gr.Row():
+                        sid0 = gr.Textbox(
+                                        label="Enter audiobook name:",
+                                        placeholder="The Amazing Saga of Olaf Piltz",
+                        )
+                        sid1 = gr.Dropdown(
+                                        label="Select language:",
+                                        choices=["language_list"],  # will add specific variable later
+
+                        )
                     refresh_button = gr.Button("Search", variant="secondary")
-                    spk_item = gr.Slider(
-                        minimum=0,
-                        maximum=2333,
-                        step=1,
-                        label=i18n("请选择说话人id"),
-                        value=0,
-                        visible=False,
-                        interactive=True,
-                    )
                 with gr.Row():
                     xxx4 = gr.Radio(
-                            label="Select clip:",
+                            label="Select audiobook:",
                             choices=["1", "2", "3", "4", "5"],
                             value="1",
                             interactive=True,
                         )
-                    xxx5 = gr.Button("Extract", variant="primary")
-                    xxx6 = gr.Slider(
-                        minimum=0,
-                        maximum=2333,
-                        step=1,
-                        label=i18n("请选择说话人id"),
-                        value=0,
-                        visible=False,
-                        interactive=True,
+                    xxx5 = gr.Button("Select", variant="secondary")
+                with gr.Row():
+                    xxx6 = gr.Radio(
+                            label="Select chapter:",
+                            choices=["1", "2", "3", "4", "5"],
+                            value="1",
+                            interactive=True,
+                    )
+                    with gr.Row():
+                        xxx7 = gr.Button("Download", variant="primary")
+                        xxx8 = gr.Textbox(label="Status")
+                    xxx7.click(
+                        xxx9,
+                        [],
+                        [xxx8],
+                        api_name="xxx7_to_xxx8",
                     )
         with gr.TabItem("Model Inference"):
             with gr.Row():

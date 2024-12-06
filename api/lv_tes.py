@@ -1,46 +1,36 @@
 import requests
 
-# Base URL der LibriVox API
+# Basis-URL der API
 BASE_URL = "https://librivox.org/api/feed/audiobooks"
 
-# Liste der verfügbaren Sprachen
-LANGUAGES = {
-    "English": "en",
-    "German": "de",
-    "French": "fr",
-    "Spanish": "es",
-    "Chinese": "zh"
-}
 
-
-# Funktion zum Suchen nach Hörbüchern
-def search_audiobooks(keyword, language_code):
+# Funktion zum Suchen nach Hörbüchern mit Sprachfilterung
+def search_audiobooks(keyword, language):
     """
-    Sucht Hörbücher mit einem bestimmten Keyword im Titel und filtert nach einer bestimmten Sprache.
+    Sucht nach Hörbüchern, die ein bestimmtes Keyword im Titel enthalten und in der angegebenen Sprache sind.
     """
     params = {
         "format": "json",
         "extended": 1,
-        "limit": 500
+        "limit": 1000
     }
+
     response = requests.get(BASE_URL, params=params)
+
     if response.status_code == 200:
         books = response.json().get("books", [])
-        keyword_lower = keyword.lower()
 
-        # Filtert Bücher nach Titel und Sprache
+        # Filtere Bücher nach der gewählten Sprache
+        filtered_books = [book for book in books if book.get("language") == language]
+
+        # Keyword-Filter anwenden
+        keyword_lower = keyword.lower()
         matching_books = [
-            book for book in books
+            book for book in filtered_books
             if keyword_lower in book["title"].lower() and len(book.get("sections", [])) >= 5
         ]
 
-        # Sprachfilter nach der Antwort anwenden
-        filtered_books = [
-            book for book in matching_books
-            if book.get("language", "").lower() == language_code
-        ]
-
-        return filtered_books[:5]
+        return matching_books[:5]  # Maximal 5 Bücher zurückgeben
     else:
         print("Fehler bei der API-Anfrage:", response.status_code)
         return []
@@ -55,13 +45,12 @@ def get_chapter_info(book_id):
     response = requests.get(book_url)
     if response.status_code == 200:
         book = response.json()
-        # Prüfen, ob die ID im Ergebnis übereinstimmt
         if str(book_id) != str(book["books"][0]["id"]):
             print("Fehler: Abgerufene Buch-ID stimmt nicht mit der Auswahl überein.")
             return []
         chapters = book["books"][0].get("sections", [])
         if chapters:
-            return chapters[:5]  # Nur die ersten 5 Kapitel zurückgeben
+            return chapters[:5]
         else:
             print("Keine Kapitelinformationen gefunden.")
             return []
@@ -92,6 +81,14 @@ if __name__ == "__main__":
 
     # Auswahl der Sprache aus der Liste
     print("\nWählen Sie die Sprache der Hörbücher aus:")
+    LANGUAGES = {
+        "English": "English",
+        "German": "German",
+        "French": "French",
+        "Spanish": "Spanish",
+        "Chinese": "Chinese"
+    }
+
     for idx, language in enumerate(LANGUAGES.keys(), 1):
         print(f"{idx}. {language}")
 

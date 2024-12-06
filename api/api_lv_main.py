@@ -1,88 +1,131 @@
 import requests
-import os
+
+# Basis-URL der API
+BASE_URL = "https://librivox.org/api/feed/audiobooks"
 
 
-# Funktion: Suche nach Hörbüchern in LibriVox
-def search_librivox_books(title=None, author=None, genre=None, language=None, format="json", extended=1):
-    base_url = "https://librivox.org/api/feed/audiobooks/"
+# Funktion zum Suchen nach Hörbüchern mit Sprachfilterung
+def search_audiobooks(keyword, language):
+    """
+    Sucht nach Hörbüchern, die ein bestimmtes Keyword im Titel enthalten und in der angegebenen Sprache sind.
+    """
     params = {
-        "title": title,
-        "author": author,
-        "genre": genre,
-        "language": language,
-        "format": format,
-        "extended": extended
+        "format": "json",
+        "extended": 1,
+        "limit": 1000
     }
 
-    try:
-        response = requests.get(base_url, params=params)
-        print(f"Request URL: {response.url}")  # Debugging-Ausgabe der URL
-        response.raise_for_status()
-        return response.json() if format == "json" else response.text
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
-        return None
+    response = requests.get(BASE_URL, params=params)
+
+    if response.status_code == 200:
+        books = response.json().get("books", [])
+
+        # Filtere Bücher nach der gewählten Sprache
+        filtered_books = [book for book in books if book.get("language") == language]
+
+        # Keyword-Filter anwenden
+        keyword_lower = keyword.lower()
+        matching_books = [
+            book for book in filtered_books
+            if keyword_lower in book["title"].lower() and len(book.get("sections", [])) >= 5
+        ]
+
+        return matching_books[:5]  # Maximal 5 Bücher zurückgeben
+    else:
+        print("Fehler bei der API-Anfrage:", response.status_code)
+        return []
 
 
-# Funktion: Audiodateien von LibriVox herunterladen
-def download_librivox_audio(book_id, save_path="./audiobooks"):
-    base_url = f"https://librivox.org/api/feed/audiobooks/?id={book_id}&format=json"
-
-    try:
-        response = requests.get(base_url)
-        response.raise_for_status()
-        book_data = response.json()
-
-        if 'books' in book_data and book_data['books']:
-            book = book_data['books'][0]  # Nehme das erste Buch (bei ID ist es eindeutig)
-            title = book.get('title', 'unknown_title')
-            language = book.get('language', 'unknown_language')
-            zip_url = book.get('url_zip_file')
-
-            print(f"Selected Book: {title} (Language: {language})")
-
-            if zip_url:
-                # Erstelle den Zielordner, falls er nicht existiert
-                os.makedirs(save_path, exist_ok=True)
-
-                # Lade die ZIP-Datei herunter
-                zip_path = os.path.join(save_path, f"{title}.zip")
-                print(f"Downloading '{title}'...")
-                with requests.get(zip_url, stream=True) as zip_response:
-                    zip_response.raise_for_status()
-                    with open(zip_path, "wb") as zip_file:
-                        for chunk in zip_response.iter_content(chunk_size=8192):
-                            zip_file.write(chunk)
-                print(f"Downloaded: {zip_path}")
-            else:
-                print("No downloadable audio file found for this book.")
+# Funktion zum Abrufen von Kapitelinformationen
+def get_chapter_info(book_id):
+    """
+    Ruft Kapitelinformationen für ein spezifisches Buch ab.
+    """
+    book_url = f"https://librivox.org/api/feed/audiobooks/?id={book_id}&format=json&extended=1"
+    response = requests.get(book_url)
+    if response.status_code == 200:
+        book = response.json()
+        if str(book_id) != str(book["books"][0]["id"]):
+            print("Fehler: Abgerufene Buch-ID stimmt nicht mit der Auswahl überein.")
+            return []
+        chapters = book["books"][0].get("sections", [])
+        if chapters:
+            return chapters[:5]
         else:
-            print("No book data found for the provided ID.")
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
+            print("Keine Kapitelinformationen gefunden.")
+            return []
+    else:
+        print("Fehler beim Abrufen der Kapitelinformationen:", response.status_code)
+        return []
+
+
+# Funktion zum Herunterladen eines Kapitels
+def download_chapter(audio_url, filename):
+    """
+    Lädt ein Kapitel herunter und speichert es in einer Datei.
+    """
+    response = requests.get(audio_url, stream=True)
+    if response.status_code == 200:
+        with open(filename, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        print(f"Kapitel wurde heruntergeladen: {filename}")
+    else:
+        print("Fehler beim Herunterladen des Kapitels:", response.status_code)
 
 
 # Hauptprogramm
 if __name__ == "__main__":
-    # Schritt 1: Suche nach Hörbüchern
-    books = search_librivox_books(format="json", extended=1)
-    if books and "books" in books:
-        print("\nAvailable Books:\n")
-        for i, book in enumerate(books.get("books", []), start=1):
-            title = book.get("title", "No title")
-            language = book.get("language", "Unknown")
-            book_id = book.get("id")
-            print(f"{i}. Title: {title}, Language: {language}, ID: {book_id}")
+    # Eingabe: Keyword
+    keyword = input("Geben Sie ein Schlagwort für den Titel ein: ")
 
-        # Schritt 2: Benutzer wählt ein Buch aus
-        try:
-            choice = int(input("\nEnter the number of the book you want to download: ")) - 1
-            selected_book = books['books'][choice]
-            book_id = selected_book['id']
+    # Auswahl der Sprache aus der Liste
+    print("\nWählen Sie die Sprache der Hörbücher aus:")
+    LANGUAGES = {
+        "English": "English",
+        "German": "German",
+        "French": "French",
+        "Spanish": "Spanish",
+        "Chinese": "Chinese"
+    }
 
-            # Schritt 3: Lade Audiodateien des ausgewählten Buches herunter
-            download_librivox_audio(book_id)
-        except (IndexError, ValueError):
-            print("Invalid selection.")
-    else:
-        print("No books found.")
+    for idx, language in enumerate(LANGUAGES.keys(), 1):
+        print(f"{idx}. {language}")
+
+    # Benutzer wählt eine Sprache
+    language_choice = int(input("Wählen Sie eine Zahl aus (1-5): "))
+    selected_language = list(LANGUAGES.values())[language_choice - 1]
+
+    # Suche nach Hörbüchern
+    books = search_audiobooks(keyword, selected_language)
+    if not books:
+        print("Keine Hörbücher gefunden.")
+        exit()
+
+    # Gefundene Hörbücher anzeigen
+    print("\nGefundene Hörbücher:")
+    for i, book in enumerate(books, 1):
+        print(f"{i}. {book['title']} (ID: {book['id']})")
+
+    # Auswahl eines Hörbuchs
+    choice = int(input("\nWählen Sie ein Hörbuch aus (1-5): "))
+    selected_book = books[choice - 1]
+
+    print(f"\nKapitel von '{selected_book['title']}':")
+    chapters = get_chapter_info(selected_book["id"])
+    if not chapters:
+        print("Keine Kapitel gefunden.")
+        exit()
+
+    # Kapitel anzeigen
+    for i, chapter in enumerate(chapters, 1):
+        print(f"{i}. {chapter['title']} - Dauer: {chapter['playtime']}")
+
+    # Auswahl eines Kapitels
+    chapter_choice = int(input("\nWählen Sie ein Kapitel aus (1-5): "))
+    selected_chapter = chapters[chapter_choice - 1]
+
+    # Herunterladen des ausgewählten Kapitels
+    audio_url = selected_chapter["listen_url"]
+    filename = f"{selected_chapter['title'].replace(' ', '_')}.mp3"
+    download_chapter(audio_url, filename)

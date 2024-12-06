@@ -11,7 +11,7 @@ from api.config_tw import client_id, oauth_token  # Twitch-API-Zugangsdaten
 STREAMER_FILE = "streamers.txt"
 OUTPUT_FOLDER = "downloads/twitch_clips"
 MAX_DURATION_MINUTES = 5
-MAX_VIDEOS_PER_STREAMER = 2
+MAX_VIDEOS_PER_STREAMER = 1
 
 # Hilfsfunktion: Abrufen von API-Daten
 def get_data_from_url(url):

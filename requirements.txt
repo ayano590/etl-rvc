@@ -9,6 +9,7 @@ faiss-cpu==1.7.3
 gradio==3.34.0
 Cython
 pydub>=0.25.1
+pyaudio
 soundfile>=0.12.1
 ffmpeg-python>=0.2.0
 tensorboardX

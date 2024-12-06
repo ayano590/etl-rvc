@@ -146,10 +146,15 @@ for name in os.listdir(weight_uvr5_root):
 
 xxx10 = "Not loaded"
 
+new_choices = ["x", "y"]
+
+
+def xxx11():
+    return gr.Radio.update(choices=new_choices, value=new_choices[0])
 
 def xxx9():
-    # xxx10 = "Successfully downloaded"
-    return xxx10
+    xxx10 = "Successfully downloaded"
+    return xxx10, xxx11()
 
 def change_choices():
     names = []
@@ -829,7 +834,7 @@ with gr.Blocks(title="VO.CODER") as app:
                     xxx7.click(
                         xxx9,
                         [],
-                        [xxx8],
+                        [xxx8, xxx6],
                         api_name="xxx7_to_xxx8",
                     )
         with gr.TabItem("Model Inference"):

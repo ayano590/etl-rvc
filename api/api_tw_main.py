@@ -28,7 +28,7 @@ user_id = user_data['data'][0]['id']
 streamer_display_name = user_data['data'][0]['display_name']
 
 # Videos des Streamers abrufen
-videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first=30')
+videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first=40')
 if not videos_data['data']:
     print(f"Keine Videos für den Streamer '{streamer_display_name}' gefunden.")
     exit()

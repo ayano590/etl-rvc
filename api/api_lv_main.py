@@ -12,7 +12,7 @@ def search_audiobooks(keyword, language):
     params = {
         "format": "json",
         "extended": 1,
-        "limit": 100
+        "limit": 1000
     }
 
     response = requests.get(BASE_URL, params=params)

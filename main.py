@@ -2,7 +2,10 @@ import requests
 import subprocess
 import os
 from datetime import datetime, timedelta
-from config_tw import client_id, oauth_token  # Twitch-API-Zugangsdaten
+
+print(os.getcwd())
+
+from api.config_tw import client_id, oauth_token  # Twitch-API-Zugangsdaten
 
 # Globale Variablen
 STREAMER_FILE = "streamers.txt"

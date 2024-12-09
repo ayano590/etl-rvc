@@ -10,6 +10,7 @@ gradio==3.34.0
 Cython
 pydub>=0.25.1
 pyaudio
+moviepy
 soundfile>=0.12.1
 ffmpeg-python>=0.2.0
 tensorboardX

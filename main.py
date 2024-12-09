@@ -8,8 +8,8 @@ print(os.getcwd())
 from api.config_tw import client_id, oauth_token  # Twitch-API-Zugangsdaten
 
 # Globale Variablen
-STREAMER_FILE = "streamers.txt"
-OUTPUT_FOLDER = "downloads/twitch_clips"
+STREAMER_FILE = "api/streamers.txt"
+OUTPUT_FOLDER = "api/downloads/twitch_clips"
 MAX_DURATION_MINUTES = 5
 MAX_VIDEOS_PER_STREAMER = 1
 

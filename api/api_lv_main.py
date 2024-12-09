@@ -1,8 +1,43 @@
 import requests
+import os
+import re
 
 # Basis-URL der API
 BASE_URL = "https://librivox.org/api/feed/audiobooks"
 
+# Zielordner immer relativ zum 'etl-rvc'-Hauptverzeichnis
+current_dir = os.getcwd()
+while os.path.basename(current_dir) != "etl-rvc" and current_dir != "/":
+    current_dir = os.path.dirname(current_dir)  # Suche nach dem Verzeichnis 'etl-rvc'
+
+if os.path.basename(current_dir) == "etl-rvc":
+    AUDIO_DIR = os.path.join(current_dir, "audios/lv_clips_original/audio")
+    if not os.path.exists(AUDIO_DIR):
+        os.makedirs(AUDIO_DIR)
+else:
+    raise RuntimeError("Das Hauptverzeichnis 'etl-rvc' konnte nicht gefunden werden.")
+
+# Funktion zum Bereinigen von Dateinamen
+def sanitize_filename(name):
+    """
+    Entfernt Sonderzeichen aus dem Dateinamen und entfernt Leerzeichen sowie Unterstriche innerhalb des Namens.
+    Erlaubt nur Buchstaben und Zahlen.
+    """
+    # Entferne Sonderzeichen
+    name = re.sub(r"[^\w\s]", "", name)
+    # Entferne Leerzeichen und Unterstriche innerhalb des Namens
+    name = re.sub(r"[\s_]+", "", name)
+    return name
+
+# Funktion zum Umwandeln der Dauer in Minuten und Sekunden
+def format_playtime(seconds):
+    """
+    Wandelt die Dauer in Sekunden in Minuten und Sekunden um.
+    """
+    seconds = int(seconds)  # Sicherstellen, dass der Wert eine Ganzzahl ist
+    minutes = seconds // 60
+    seconds = seconds % 60
+    return f"{minutes}m{seconds}s"
 
 # Funktion zum Suchen nach Hörbüchern mit Sprachfilterung
 def search_audiobooks(keyword, language):
@@ -35,7 +70,6 @@ def search_audiobooks(keyword, language):
         print("Fehler bei der API-Anfrage:", response.status_code)
         return []
 
-
 # Funktion zum Abrufen von Kapitelinformationen
 def get_chapter_info(book_id):
     """
@@ -58,7 +92,6 @@ def get_chapter_info(book_id):
         print("Fehler beim Abrufen der Kapitelinformationen:", response.status_code)
         return []
 
-
 # Funktion zum Herunterladen eines Kapitels
 def download_chapter(audio_url, filename):
     """
@@ -66,13 +99,13 @@ def download_chapter(audio_url, filename):
     """
     response = requests.get(audio_url, stream=True)
     if response.status_code == 200:
-        with open(filename, "wb") as f:
+        filepath = os.path.join(AUDIO_DIR, filename)
+        with open(filepath, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
-        print(f"Kapitel wurde heruntergeladen: {filename}")
+        print(f"Kapitel wurde heruntergeladen: {filepath}")
     else:
         print("Fehler beim Herunterladen des Kapitels:", response.status_code)
-
 
 # Hauptprogramm
 if __name__ == "__main__":
@@ -125,7 +158,14 @@ if __name__ == "__main__":
     chapter_choice = int(input("\nWählen Sie ein Kapitel aus (1-5): "))
     selected_chapter = chapters[chapter_choice - 1]
 
-    # Herunterladen des ausgewählten Kapitels
-    audio_url = selected_chapter["listen_url"]
-    filename = f"{selected_chapter['title'].replace(' ', '_')}.mp3"
-    download_chapter(audio_url, filename)
+    # Dauer formatieren
+    duration_in_seconds = selected_chapter["playtime"]
+    formatted_duration = format_playtime(duration_in_seconds)
+
+    # Erstelle einen sicheren Dateinamen
+    title = sanitize_filename(selected_book['title'])
+    language = sanitize_filename(selected_language)
+    chapter_title = sanitize_filename(selected_chapter['title'])
+    filename = f"{title}_{language}_{chapter_title}_{formatted_duration}.mp3"
+
+    download_chapter(audio_url=selected_chapter["listen_url"], filename=filename)

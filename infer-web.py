@@ -909,7 +909,7 @@ with gr.Blocks(title="VO.CODER") as app:
                                 label=i18n(
                                     "保护清辅音和呼吸声，防止电音撕裂等artifact，拉满0.5不开启，调低加大保护力度但可能降低索引效果"
                                 ),
-                                value=0.33,
+                                value=0.25,
                                 step=0.01,
                                 interactive=True,
                             )
@@ -927,7 +927,7 @@ with gr.Blocks(title="VO.CODER") as app:
                                 minimum=0,
                                 maximum=1,
                                 label=i18n("检索特征占比"),
-                                value=0.75,
+                                value=0.5,
                                 interactive=True,
                             )
                             f0_file = gr.File(

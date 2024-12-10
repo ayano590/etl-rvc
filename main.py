@@ -44,8 +44,10 @@ def tw_orig_extract_wav():
         # change output file extension to .wav
         file_format = name.split(".")[-1]
         output_name = name.replace(file_format, "wav")
-        # extract audio and save it in specified directory
-        extract_wav.extract(tw_orig_mp4_dir + "\\" + name, tw_orig_wav_dir + "\\audio\\" + output_name)
+
+        if not os.path.isfile(tw_orig_wav_dir + "\\audio\\" + output_name):
+            # extract audio and save it in specified directory
+            extract_wav.extract(tw_orig_mp4_dir + "\\" + name, tw_orig_wav_dir + "\\audio\\" + output_name)
 
 def tw_fft():
     # perform FFT on TW clips
@@ -76,12 +78,14 @@ def combine():
         # iterate over converted tw wav files
         for audio_name in os.listdir(tw_conv_wav_dir + "\\audio\\"):
             # check if the title matches
-            audio_title = audio_name.split(".")[0]
-            if title == audio_title:
-                combine_wav_mp4.merge_av(
-                    tw_conv_wav_dir + "\\audio\\" + audio_name,
-                    tw_orig_mp4_dir + "\\" + name,
-                    tw_conv_mp4_dir + "\\" + title + "_conv." + file_format)
+            [audio_title, audio_format] = audio_name.split(".")
+
+            if audio_title.startswith(title):
+                if not os.path.isfile(tw_conv_mp4_dir + "\\" + audio_title + "." + file_format):
+                    combine_wav_mp4.merge_av(
+                        tw_conv_wav_dir + "\\audio\\" + audio_name,
+                        tw_orig_mp4_dir + "\\" + name,
+                        tw_conv_mp4_dir + "\\" + audio_title + "." + file_format)
 
 def main():
     lv_fft()

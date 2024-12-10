@@ -8,7 +8,7 @@ load_dotenv()
 
 from moviepy import VideoFileClip, AudioFileClip
 
-def merge_av(mp4_file, wav_file, output_file):
+def merge_av(wav_file, mp4_file, output_file):
     # Load the video file
     video = VideoFileClip(mp4_file)
 

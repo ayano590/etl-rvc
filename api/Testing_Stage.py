@@ -55,7 +55,7 @@ def search_audiobooks(keyword, language):
             "format": "json",
             "extended": 1,
             "offset": offset,
-            "limit": 100  # Standardlimit pro API-Aufruf
+            "limit": 100
         }
 
         response = requests.get(BASE_URL, params=params)

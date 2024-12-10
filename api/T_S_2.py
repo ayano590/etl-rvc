@@ -42,9 +42,10 @@ def upload_files_to_container(container_name, local_folders, blob_service_client
     container_client = blob_service_client.get_container_client(container_name)
 
     for local_folder in local_folders:
+        # Erstellen des lokalen Ordners, falls er nicht existiert
         if not os.path.exists(local_folder):
-            print(f"Lokaler Ordner {local_folder} existiert nicht. Überspringe.")
-            continue
+            print(f"Lokaler Ordner {local_folder} existiert nicht. Erstelle ihn.")
+            os.makedirs(local_folder, exist_ok=True)  # Ordner erstellen
 
         # Dateien im lokalen Ordner durchgehen
         for root, _, files in os.walk(local_folder):
@@ -70,6 +71,7 @@ def upload_files_to_container(container_name, local_folders, blob_service_client
                 with open(local_file_path, "rb") as data:
                     blob_client.upload_blob(data, overwrite=True)
                     print(f"Datei '{blob_path}' wurde in den Container '{container_name}' hochgeladen.")
+
 
 # Hauptfunktion
 def main():

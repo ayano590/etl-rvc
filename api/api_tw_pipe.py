@@ -1,7 +1,14 @@
+import os
+import sys
+from dotenv import load_dotenv
+
+now_dir = os.getcwd()
+sys.path.append(now_dir)
+load_dotenv()
+
 import requests
 import subprocess
-import os
-from config_tw import client_id, oauth_token
+from api.config_tw import client_id, oauth_token
 
 # Aktuelles Arbeitsverzeichnis finden und nach "etl-rvc" suchen
 current_dir = os.getcwd()
@@ -23,9 +30,10 @@ OUTPUT_FOLDER = os.path.join(current_dir, 'audios', 'tw_clips_original_mp4')
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 # Globale Variablen
-STREAMER_FILE = "streamers.txt"
-MAX_DURATION_MINUTES = 5
-MAX_VIDEOS_PER_STREAMER = 1
+STREAMER_FILE = "api/streamers.txt"
+MAX_DURATION_MINUTES = 10
+MAX_VIDEOS_PER_STREAMER = 3
+NUM_SEARCH_VIDEOS = 100
 
 # Hilfsfunktion: Abrufen von API-Daten
 def get_data_from_url(url):
@@ -57,7 +65,7 @@ def process_streamer(streamer_name):
     streamer_display_name = user_data['data'][0]['display_name']
 
     # Videos abrufen
-    videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first=30')
+    videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first={NUM_SEARCH_VIDEOS}')
     if not videos_data or not videos_data['data']:
         print(f"Keine Videos für den Streamer '{streamer_display_name}' gefunden.")
         return

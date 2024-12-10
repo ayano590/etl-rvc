@@ -1,12 +1,29 @@
 import requests
 import subprocess
 import os
-from datetime import datetime, timedelta
-from config_tw import client_id, oauth_token  # Twitch-API-Zugangsdaten
+from config_tw import client_id, oauth_token
+
+# Aktuelles Arbeitsverzeichnis finden und nach "etl-rvc" suchen
+current_dir = os.getcwd()
+
+# Suche nach dem Verzeichnis 'etl-rvc'
+while os.path.basename(current_dir) != "etl-rvc" and current_dir != "/":
+    current_dir = os.path.dirname(current_dir)
+
+# Prüfen, ob das Verzeichnis gefunden wurde
+if os.path.basename(current_dir) == "etl-rvc":
+    print(f"Das Arbeitsverzeichnis 'etl-rvc' wurde gefunden: {current_dir}")
+else:
+    raise RuntimeError("Das Hauptverzeichnis 'etl-rvc' konnte nicht gefunden werden.")
+
+# Zielordner relativ zum gefundenen 'etl-rvc' Verzeichnis
+OUTPUT_FOLDER = os.path.join(current_dir, 'audios', 'tw_clips_original_mp4')
+
+# Sicherstellen, dass der Zielordner existiert
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 # Globale Variablen
 STREAMER_FILE = "streamers.txt"
-OUTPUT_FOLDER = "downloads/twitch_clips"
 MAX_DURATION_MINUTES = 5
 MAX_VIDEOS_PER_STREAMER = 1
 
@@ -46,7 +63,6 @@ def process_streamer(streamer_name):
         return
 
     # Videos filtern und herunterladen
-    os.makedirs(OUTPUT_FOLDER, exist_ok=True)  # Zielordner erstellen, falls nicht vorhanden
     downloaded_count = 0
 
     for video in videos_data['data']:

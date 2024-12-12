@@ -12,6 +12,8 @@ tw_orig_mp4_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\aud
 tw_orig_wav_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\audios\\tw_clips_original_wav"
 tw_conv_mp4_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\audios\\tw_clips_converted_mp4"
 tw_conv_wav_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\audios\\tw_clips_converted_wav"
+weights_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\assets\\weights"
+index_dir = ".\logs"
 
 try:
     import intel_extension_for_pytorch as ipex  # pylint: disable=import-error, unused-import

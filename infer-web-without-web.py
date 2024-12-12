@@ -6,35 +6,15 @@ now_dir = os.getcwd()
 sys.path.append(now_dir)
 load_dotenv()
 from infer.modules.vc.modules import VC
-from infer.modules.uvr5.modules import uvr
-from infer.lib.train.process_ckpt import (
-    change_info,
-    extract_small_model,
-    merge,
-    show_info,
-)
 from i18n.i18n import I18nAuto
 from configs.config import Config
-from sklearn.cluster import MiniBatchKMeans
 import torch
-import numpy as np
-import gradio as gr
-import faiss
 import fairseq
-import pathlib
-import json
-from time import sleep
-from subprocess import Popen
-from random import shuffle
 import warnings
-import traceback
-import threading
 import shutil
 import logging
 
-import requests
 from scipy.io.wavfile import write
-import numpy as np
 from configs.config import (lv_orig_dir,
                             lv_conv_dir,
                             tw_orig_wav_dir,
@@ -50,7 +30,6 @@ logger = logging.getLogger(__name__)
 tmp = os.path.join(now_dir, "TEMP")
 shutil.rmtree(tmp, ignore_errors=True)
 shutil.rmtree("%s/runtime/Lib/site-packages/infer_pack" % (now_dir), ignore_errors=True)
-shutil.rmtree("%s/runtime/Lib/site-packages/uvr5_pack" % (now_dir), ignore_errors=True)
 os.makedirs(tmp, exist_ok=True)
 os.makedirs(os.path.join(now_dir, "logs"), exist_ok=True)
 os.makedirs(os.path.join(now_dir, "assets/weights"), exist_ok=True)
@@ -58,10 +37,8 @@ os.environ["TEMP"] = tmp
 warnings.filterwarnings("ignore")
 torch.manual_seed(114514)
 
-
 config = Config()
 vc = VC(config)
-
 
 if config.dml == True:
 
@@ -73,7 +50,7 @@ if config.dml == True:
     fairseq.modules.grad_multiply.GradMultiply.forward = forward_dml
 i18n = I18nAuto()
 logger.info(i18n)
-# 判断是否有能用来训练和加速推理的N卡
+# check if the computer has a GPU compatible with CUDA
 ngpu = torch.cuda.device_count()
 gpu_infos = []
 mem = []
@@ -106,7 +83,7 @@ if torch.cuda.is_available() or ngpu != 0:
             ]
         ):
             # A10#A100#V100#A40#P40#M40#K80#A4500
-            if_gpu_ok = True  # 至少有一张能用的N卡
+            if_gpu_ok = True  # at least one GPU available
             gpu_infos.append("%s\t%s" % (i, gpu_name))
             mem.append(
                 int(
@@ -121,28 +98,13 @@ if if_gpu_ok and len(gpu_infos) > 0:
     gpu_info = "\n".join(gpu_infos)
     default_batch_size = min(mem) // 2
 else:
-    gpu_info = i18n("很遗憾您这没有能用的显卡来支持您训练")
+    gpu_info = "No compatible GPU"
     default_batch_size = 1
 gpus = "-".join([i[0] for i in gpu_infos])
 
 
 weight_root = os.getenv("weight_root")
-weight_uvr5_root = os.getenv("weight_uvr5_root")
 index_root = os.getenv("index_root")
-
-names = []
-for name in os.listdir(weight_root):
-    if name.endswith(".pth"):
-        names.append(name)
-index_paths = []
-for root, dirs, files in os.walk(index_root, topdown=False):
-    for name in files:
-        if name.endswith(".index") and "trained" not in name:
-            index_paths.append("%s/%s" % (root, name))
-uvr5_names = []
-for name in os.listdir(weight_uvr5_root):
-    if name.endswith(".pth") or "onnx" in name:
-        uvr5_names.append(name.replace(".pth", ""))
 
 
 male_streamer = ["Trymacs", "HandOfBlood"]
@@ -150,8 +112,8 @@ male_voice = ["german", "german_experimental", "spanish"]
 streamer_voice = None
 infer_voice = None
 
-spk_item = 0  # ID of speaker, does not make a difference
-input_audio0 = tw_orig_wav_dir + "\\audio"  # just the path to the tw original wav folder, adding video titles in the code
+spk_item = 0  # ID of speaker, leave as is
+input_audio0 = tw_orig_wav_dir + "\\audio"  # path to the tw original wav audio folder, adding video titles in the code
 vc_transform0 = 0  # voice transpose
 f0_file = None  # not sure
 f0method0 = "rmvpe"  # inference method
@@ -164,6 +126,7 @@ rms_mix_rate0 = 0.25
 protect0 = 0.25
 
 def tw_infer():
+
     # infer all tw clips with all trained models
     for file_name in os.listdir(input_audio0):
         [title, file_format] = file_name.split(".")
@@ -176,6 +139,7 @@ def tw_infer():
 
         # select language
         for lang in os.listdir(weights_dir):
+
             # skip .gitignore file
             if ".gitignore" in lang:
                 continue
@@ -187,11 +151,17 @@ def tw_infer():
             else:
                 infer_voice = 12
 
+            # skip if file already exists
+            output_path = f"{tw_conv_wav_dir}\\audio\\{title}_{spk_lang}.wav"
+
+            if not os.path.isfile(output_path):
+                continue
+
             # transpose
             vc_transform0 = infer_voice - streamer_voice
 
             # set inference voice
-            _, _, _, file_index2, file_index4 = vc.get_vc(
+            _, _, _, file_index2, _ = vc.get_vc(
                                                             lang,
                                                             protect0,
                                                             protect0
@@ -216,10 +186,7 @@ def tw_infer():
             
             print(log_out)
 
-            output_path = f"{tw_conv_wav_dir}\\audio\\{title}_{spk_lang}.wav"
-
-            if not os.path.isfile(output_path):
-                write(output_path, sample_rate, audio_out)
+            write(output_path, sample_rate, audio_out)
 
 if __name__ == "__main__":
     tw_infer()

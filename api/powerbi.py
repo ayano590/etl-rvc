@@ -1,15 +1,21 @@
-import os
+import pandas as pd
 from playsound import playsound
+import os
 
-# Beispiel-Pfad zu einer Audiodatei
-audio_url = "<hier die URL aus den Daten einfügen>"
+# Daten aus Power BI laden (Power BI stellt die Tabelle als `dataset` bereit)
+df = dataset  # Power BI-Tabelle wird automatisch als `dataset` bereitgestellt
 
-# Audiodatei lokal speichern
-file_name = "temp_audio.mp3"
-os.system(f"curl -o {file_name} {audio_url}")
+# Durch die URLs iterieren
+for index, row in df.iterrows():
+    audio_url = row['File URL']  # Spalte mit den Audiodatei-URLs
+    file_name = f"temp_audio_{index}.mp3"
 
-# Audiodatei abspielen
-playsound(file_name)
+    # Datei herunterladen
+    os.system(f"curl -o {file_name} {audio_url}")
 
-# Datei löschen (optional)
-os.remove(file_name)
+    # Audiodatei abspielen
+    print(f"Spiele Datei: {file_name}")
+    playsound(file_name)
+
+    # Datei löschen (optional)
+    os.remove(file_name)

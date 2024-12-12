@@ -1,21 +1,21 @@
-import pandas as pd
-from playsound import playsound
-import os
+import pygame
+import urllib.request
 
-# Daten aus Power BI laden (Power BI stellt die Tabelle als `dataset` bereit)
-df = dataset  # Power BI-Tabelle wird automatisch als `dataset` bereitgestellt
+# Beispiel URL einer Audiodatei
+audio_url = "https://example.com/path/to/audiofile.mp3"
 
-# Durch die URLs iterieren
-for index, row in df.iterrows():
-    audio_url = row['File URL']  # Spalte mit den Audiodatei-URLs
-    file_name = f"temp_audio_{index}.mp3"
+# Herunterladen der Datei
+audio_file = "audiofile.mp3"
+urllib.request.urlretrieve(audio_url, audio_file)
 
-    # Datei herunterladen
-    os.system(f"curl -o {file_name} {audio_url}")
+# Initialisierung von pygame für die Audiowiedergabe
+pygame.mixer.init()
+pygame.mixer.music.load(audio_file)
 
-    # Audiodatei abspielen
-    print(f"Spiele Datei: {file_name}")
-    playsound(file_name)
+# Abspielen der Audiodatei
+pygame.mixer.music.play()
 
-    # Datei löschen (optional)
-    os.remove(file_name)
+# Warten, bis die Audiodatei fertig ist
+while pygame.mixer.music.get_busy():
+    pygame.time.Clock().tick(10)
+

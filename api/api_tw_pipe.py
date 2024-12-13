@@ -5,12 +5,13 @@ from dotenv import load_dotenv
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 load_dotenv()
-from api.config_tw import client_id, oauth_token
+
 import requests
 import subprocess
 from configs.config import (client_id,
                             oauth_token,
                             MAX_DURATION_MINUTES,
+                            MIN_DURATION_MINUTES,
                             MAX_VIDEOS_PER_STREAMER,
                             NUM_SEARCH_VIDEOS)
 

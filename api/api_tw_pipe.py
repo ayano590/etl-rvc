@@ -9,6 +9,7 @@ load_dotenv()
 import requests
 import subprocess
 from api.config_tw import client_id, oauth_token
+#from config_tw import client_id, oauth_token
 
 # Aktuelles Arbeitsverzeichnis finden und nach "etl-rvc" suchen
 current_dir = os.getcwd()
@@ -32,8 +33,9 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 # Globale Variablen
 STREAMER_FILE = "api/streamers.txt"
 MAX_DURATION_MINUTES = 10
+MIN_DURATION_MINUTES = 5
 MAX_VIDEOS_PER_STREAMER = 3
-NUM_SEARCH_VIDEOS = 100
+NUM_SEARCH_VIDEOS = 200
 
 # Hilfsfunktion: Abrufen von API-Daten
 def get_data_from_url(url):
@@ -91,8 +93,8 @@ def process_streamer(streamer_name):
             print(f"Fehler beim Analysieren der Videodauer: {duration}")
             continue
 
-        # Video überspringen, wenn es zu lang ist
-        if total_minutes > MAX_DURATION_MINUTES:
+        # Video überspringen, wenn es zu lang oder zu kurz ist
+        if total_minutes > MAX_DURATION_MINUTES or total_minutes < MIN_DURATION_MINUTES:
             continue
 
         # Prüfen, ob das Video bereits existiert

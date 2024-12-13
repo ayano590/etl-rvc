@@ -92,8 +92,8 @@ def process_streamer(streamer_name):
             print(f"Fehler beim Analysieren der Videodauer: {duration}")
             continue
 
-        # Video überspringen, wenn es zu lang ist
-        if total_minutes > MAX_DURATION_MINUTES:
+        # Video überspringen, wenn es zu lang oder zu kurz ist
+        if total_minutes > MAX_DURATION_MINUTES or total_minutes < MIN_DURATION_MINUTES:
             continue
 
         # Prüfen, ob das Video bereits existiert

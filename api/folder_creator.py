@@ -19,7 +19,7 @@ def find_base_directory(directory_name):
         current_path = os.path.dirname(current_path)
         if os.path.basename(current_path) == directory_name:
             return current_path
-        if current_path == os.path.dirname(current_path):  # Root-Verzeichnis erreicht
+        if current_path == os.path.dirname(current_path):
             return None
 
 def create_folders(base_path, paths):

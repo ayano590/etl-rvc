@@ -14,7 +14,7 @@ oauth_token = 'x1rpjkpms3ayndwupflg6i8wi7qxks'
 MAX_DURATION_MINUTES = 10
 MIN_DURATION_MINUTES = 5
 MAX_VIDEOS_PER_STREAMER = 3
-NUM_SEARCH_VIDEOS = 200
+NUM_SEARCH_VIDEOS = 100
 
 # constants for inference
 spk_item = 0  # ID of speaker, leave as is

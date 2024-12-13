@@ -27,21 +27,20 @@ def fft_analysis(audio_file, audio_format):
     audio_data = raw_data / np.max(np.abs(raw_data))
 
     # Step 3: Compute the FFT
-    fft_result = np.fft.fft(audio_data)
-    frequencies = np.fft.fftfreq(len(fft_result), 1 / sample_rate)
+    fft_result = np.fft.rfft(audio_data)
+    frequencies = np.fft.rfftfreq(len(fft_result), 1 / sample_rate)
 
     # Take the magnitude of the FFT result
-    magnitude = np.abs(fft_result[:len(fft_result) // 2])
-    positive_freqs = frequencies[:len(frequencies) // 2]
+    magnitude = np.abs(fft_result)
 
     # Convert amplitude to decibels
     magnitude_db = 20 * np.log10(magnitude + 1e-10)  # Avoid log(0) by adding a small value
 
     # Step 4: Create a logarithmic frequency grid
-    log_freqs = np.logspace(np.log10(positive_freqs[1]), np.log10(positive_freqs[-1]), num=500)
+    log_freqs = np.logspace(np.log10(frequencies[1]), np.log10(frequencies[-1]), num=500)
 
     # Step 5: Interpolate the FFT data onto the logarithmic frequency grid
-    interp_magnitude_db = interp1d(positive_freqs, magnitude_db, kind="linear", bounds_error=False, fill_value="extrapolate")
+    interp_magnitude_db = interp1d(frequencies, magnitude_db, kind="linear", bounds_error=False, fill_value="extrapolate")
     log_magnitude_db = interp_magnitude_db(log_freqs)
 
     # # Step 6: Plot the frequency spectrum

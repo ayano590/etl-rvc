@@ -48,3 +48,4 @@ torchfcpe
 ffmpy==0.3.1
 python-dotenv>=1.0.0
 av
+azure-storage-blob==12.24.0

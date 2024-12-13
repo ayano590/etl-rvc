@@ -6,14 +6,20 @@ from multiprocessing import cpu_count
 
 import torch
 
-lv_orig_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\audios\\lv_clips_original"
-lv_conv_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\audios\\lv_clips_converted"
-tw_orig_mp4_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\audios\\tw_clips_original_mp4"
-tw_orig_wav_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\audios\\tw_clips_original_wav"
-tw_conv_mp4_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\audios\\tw_clips_converted_mp4"
-tw_conv_wav_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\audios\\tw_clips_converted_wav"
-weights_dir = "C:\\Users\\am-user336\\Documents\\final-project\\etl-rvc\\assets\\weights"
-index_dir = ".\logs"
+# constants for inference
+spk_item = 0  # ID of speaker, leave as is
+vc_transform0 = 0  # voice transpose, default value 0
+f0_file = None  # not sure
+f0method0 = "rmvpe"  # inference method
+index_rate1 = 0.5
+filter_radius0 = 3
+resample_sr0 = 0
+rms_mix_rate0 = 0.25
+protect0 = 0.25
+
+# other inference params
+male_streamer = ["Trymacs", "HandOfBlood"]
+male_voice = ["german", "german_experimental", "spanish"]
 
 try:
     import intel_extension_for_pytorch as ipex  # pylint: disable=import-error, unused-import

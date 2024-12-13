@@ -37,9 +37,6 @@ def fft_analysis(audio_file, audio_format):
     # Convert amplitude to decibels
     magnitude_db = 20 * np.log10(magnitude + 1e-10)  # Avoid log(0) by adding a small value
 
-    print(f"Length of frequencies: {len(frequencies)}")
-    print(f"Length of magnitude_db: {len(magnitude_db)}")
-
     # Step 4: Create a logarithmic frequency grid
     log_freqs = np.logspace(np.log10(frequencies[1]), np.log10(frequencies[-1]), num=500)
 

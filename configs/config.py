@@ -6,6 +6,15 @@ from multiprocessing import cpu_count
 
 import torch
 
+# credentials for twitch download pipeline
+client_id = 'tb5e6sfh4ip5qboau88dk0lzh19fgb'
+oauth_token = 'x1rpjkpms3ayndwupflg6i8wi7qxks'
+
+# settings for twitch download
+MAX_DURATION_MINUTES = 10
+MAX_VIDEOS_PER_STREAMER = 3
+NUM_SEARCH_VIDEOS = 100
+
 # constants for inference
 spk_item = 0  # ID of speaker, leave as is
 vc_transform0 = 0  # voice transpose, default value 0

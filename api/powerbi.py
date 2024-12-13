@@ -1,15 +1,21 @@
-import os
-from playsound import playsound
+import pygame
+import urllib.request
 
-# Beispiel-Pfad zu einer Audiodatei
-audio_url = "<hier die URL aus den Daten einfügen>"
+# Beispiel URL einer Audiodatei
+audio_url = "https://example.com/path/to/audiofile.mp3"
 
-# Audiodatei lokal speichern
-file_name = "temp_audio.mp3"
-os.system(f"curl -o {file_name} {audio_url}")
+# Herunterladen der Datei
+audio_file = "audiofile.mp3"
+urllib.request.urlretrieve(audio_url, audio_file)
 
-# Audiodatei abspielen
-playsound(file_name)
+# Initialisierung von pygame für die Audiowiedergabe
+pygame.mixer.init()
+pygame.mixer.music.load(audio_file)
 
-# Datei löschen (optional)
-os.remove(file_name)
+# Abspielen der Audiodatei
+pygame.mixer.music.play()
+
+# Warten, bis die Audiodatei fertig ist
+while pygame.mixer.music.get_busy():
+    pygame.time.Clock().tick(10)
+

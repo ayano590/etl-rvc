@@ -1,7 +1,14 @@
 import requests
 import subprocess
 import os
+import sys
 from config_tw import client_id, oauth_token
+
+# from dotenv import load_dotenv
+# now_dir = os.getcwd()
+# sys.path.append(now_dir)
+# load_dotenv()
+# from api.config_tw import client_id, oauth_token
 
 # Streamer-Name als Parameter
 streamer_name = input("Geben Sie den Namen des Streamers ein: ").strip()
@@ -76,10 +83,16 @@ if not all([video_key, sanitized_title, sanitized_published_at]):
 
 output_path = os.path.join(output_folder, output_filename)
 
-# Video herunterladen
+# Pfad zu ffmpeg festlegen (angenommen, es befindet sich im übergeordneten Verzeichnis)
+ffmpeg_path = os.path.join(os.getcwd(), 'ffmpeg', 'ffmpeg.exe')  # Beispiel: ffmpeg liegt in einem Ordner 'ffmpeg' über dem aktuellen Verzeichnis
+
+# Video herunterladen mit yt-dlp und ffmpeg
 print(f"\nHerunterladen von: {video_title}")
 try:
-    subprocess.run(["yt-dlp", video_url, "-o", output_path], check=True)
+    subprocess.run(
+        ["yt-dlp", "--ffmpeg-location", ffmpeg_path, video_url, "-o", output_path],
+        check=True
+    )
     print(f"Video erfolgreich heruntergeladen und gespeichert in: {output_path}")
 except subprocess.CalledProcessError as e:
     print("Fehler beim Herunterladen:", e)

@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 load_dotenv()
-
+from api.config_tw import client_id, oauth_token
 import requests
 import subprocess
-from api.config_tw import client_id, oauth_token
+
 #from config_tw import client_id, oauth_token
 
 # Aktuelles Arbeitsverzeichnis finden und nach "etl-rvc" suchen

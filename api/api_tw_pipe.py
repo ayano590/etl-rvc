@@ -7,7 +7,8 @@ sys.path.append(now_dir)
 load_dotenv()
 
 import requests
-import subprocess
+# import subprocess
+from yt_dlp import YoutubeDL
 from configs.config import (client_id,
                             oauth_token,
                             MAX_DURATION_MINUTES,
@@ -110,10 +111,16 @@ def process_streamer(streamer_name):
         # Video herunterladen
         print(f"\nHerunterladen von: {title}")
         try:
-            subprocess.run(["yt-dlp", url, "-o", output_path], check=True)
+            # subprocess.run(["yt-dlp", url, "-o", output_path], check=True)
+            ydl_opts = {
+                'outtmpl': output_path,
+                'format': 'best'
+            }
+            with YoutubeDL(ydl_opts) as ydl:
+                ydl.download(url)
             print(f"Video erfolgreich heruntergeladen und gespeichert in: {output_path}")
             downloaded_count += 1
-        except subprocess.CalledProcessError as e:
+        except Exception as e:
             print(f"Fehler beim Herunterladen des Videos: {e}")
 
 # Streamer-Liste durchgehen

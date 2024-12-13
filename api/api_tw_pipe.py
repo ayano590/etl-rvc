@@ -8,7 +8,11 @@ load_dotenv()
 
 import requests
 import subprocess
-from api.config_tw import client_id, oauth_token
+from configs.config import (client_id,
+                            oauth_token,
+                            MAX_DURATION_MINUTES,
+                            MAX_VIDEOS_PER_STREAMER,
+                            NUM_SEARCH_VIDEOS)
 
 # Aktuelles Arbeitsverzeichnis finden und nach "etl-rvc" suchen
 current_dir = os.getcwd()
@@ -29,11 +33,8 @@ OUTPUT_FOLDER = os.path.join(current_dir, 'audios', 'tw_clips_original_mp4')
 # Sicherstellen, dass der Zielordner existiert
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-# Globale Variablen
-STREAMER_FILE = "api/streamers.txt"
-MAX_DURATION_MINUTES = 10
-MAX_VIDEOS_PER_STREAMER = 3
-NUM_SEARCH_VIDEOS = 100
+# accessing streamers list
+STREAMER_FILE = os.getenv('STREAMER_FILE')
 
 # Hilfsfunktion: Abrufen von API-Daten
 def get_data_from_url(url):

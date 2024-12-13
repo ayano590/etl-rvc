@@ -25,7 +25,6 @@ from configs.config import (Config,
                             protect0,
                             male_streamer,
                             male_voice)
-
 from staging import extract_wav
 
 

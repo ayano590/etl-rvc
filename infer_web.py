@@ -63,7 +63,7 @@ if config.dml == True:
     fairseq.modules.grad_multiply.GradMultiply.forward = forward_dml
 i18n = I18nAuto()
 logger.info(i18n)
-# 判断是否有能用来训练和加速推理的N卡
+
 ngpu = torch.cuda.device_count()
 gpu_infos = []
 mem = []
@@ -96,7 +96,7 @@ if torch.cuda.is_available() or ngpu != 0:
             ]
         ):
             # A10#A100#V100#A40#P40#M40#K80#A4500
-            if_gpu_ok = True  # 至少有一张能用的N卡
+            if_gpu_ok = True
             gpu_infos.append("%s\t%s" % (i, gpu_name))
             mem.append(
                 int(
@@ -752,7 +752,7 @@ def train1key(
     yield get_info_str(i18n("全流程结束！"))
 
 
-#                    ckpt_path2.change(change_info_,[ckpt_path2],[sr__,if_f0__])
+# ckpt_path2.change(change_info_,[ckpt_path2],[sr__,if_f0__])
 def change_info_(ckpt_path):
     if not os.path.exists(ckpt_path.replace(os.path.basename(ckpt_path), "train.log")):
         return {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}
@@ -784,59 +784,27 @@ def change_f0_method(f0method8):
 with gr.Blocks(title="VO.CODER") as app:
     gr.Markdown("## VO.CODER")
     with gr.Tabs():
-        with gr.TabItem("Stream/Audiobook"):
-            with gr.TabItem("Twitch"):
-                with gr.Row():
-                    sid0 = gr.Textbox(
-                                    label="Enter streamer name:",
-                                    placeholder="Olaf Piltz",
+        with gr.TabItem("Twitch Abfrage"):
+            with gr.Row():
+                streamer_name = gr.Textbox(
+                                label="Enter streamer name:",
+                                placeholder="Olaf Piltz",
+                )
+                streamer_search = gr.Button("Search", variant="secondary")
+            with gr.Row():
+                streamer_clips = gr.Radio(
+                        label="Select clip:",
+                        choices=["1", "2", "3", "4", "5"],
+                        value="1",
+                        interactive=True,
                     )
-                    xxx1 = gr.Button("Search", variant="secondary")
-                with gr.Row():
-                    xxx2 = gr.Radio(
-                            label="Select clip:",
-                            choices=["1", "2", "3", "4", "5"],
-                            value="1",
-                            interactive=True,
-                        )
-                    xxx3 = gr.Button("Download", variant="primary")
-            with gr.TabItem("LibriVox"):
-                with gr.Row():
-                    with gr.Row():
-                        sid0 = gr.Textbox(
-                                        label="Enter audiobook name:",
-                                        placeholder="The Amazing Saga of Olaf Piltz",
-                        )
-                        sid1 = gr.Dropdown(
-                                        label="Select language:",
-                                        choices=["language_list"],  # will add specific variable later
-
-                        )
-                    refresh_button = gr.Button("Search", variant="secondary")
-                with gr.Row():
-                    xxx4 = gr.Radio(
-                            label="Select audiobook:",
-                            choices=["1", "2", "3", "4", "5"],
-                            value="1",
-                            interactive=True,
-                        )
-                    xxx5 = gr.Button("Select", variant="secondary")
-                with gr.Row():
-                    xxx6 = gr.Radio(
-                            label="Select chapter:",
-                            choices=["1", "2", "3", "4", "5"],
-                            value="1",
-                            interactive=True,
-                    )
-                    with gr.Row():
-                        xxx7 = gr.Button("Download", variant="primary")
-                        xxx8 = gr.Textbox(label="Status")
-                    xxx7.click(
-                        xxx9,
-                        [],
-                        [xxx8, xxx6],
-                        api_name="xxx7_to_xxx8",
-                    )
+                download_btn = gr.Button("Download", variant="primary")
+            download_btn.click(
+                xxx9,
+                [],
+                [streamer_name, streamer_name],
+                api_name="twitch_user",
+            )
         with gr.TabItem("Model Inference"):
             with gr.Row():
                 sid0 = gr.Dropdown(label=i18n("推理音色"), choices=sorted(names))
@@ -1541,13 +1509,6 @@ with gr.Blocks(title="VO.CODER") as app:
             butOnnx.click(
                 export_onnx, [ckpt_dir, onnx_dir], infoOnnx, api_name="export_onnx"
             )
-        with gr.TabItem("FAQ (Frequently Asked Questions)"):
-            try:
-                with open("docs/cn/faq_en.md", "r", encoding="utf8") as f:
-                    info = f.read()
-                gr.Markdown(value=info)
-            except:
-                gr.Markdown(traceback.format_exc())
 
     if config.iscolab:
         app.queue(concurrency_count=511, max_size=1022).launch(share=True)

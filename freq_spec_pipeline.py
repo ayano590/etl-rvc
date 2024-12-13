@@ -37,8 +37,11 @@ def lv_fft():
 
             if not os.path.isfile(lv_dir_fft + "/" + output_name):
                 # perform FFT and save it in specified directory
+                print(f"Analyzing the frequency spectrum of {name}...")
                 fft_file = audio_fft.fft_analysis(lv_dir_audio + "/" + name, audio_format)
                 np.savetxt(lv_dir_fft + "/" + output_name, fft_file)
+            else:
+                print(f"Skipping file {name}...")
 
 def tw_fft():
     # perform FFT on TW clips
@@ -59,8 +62,11 @@ def tw_fft():
 
             if not os.path.isfile(tw_dir_fft + "/" + output_name):
                 # perform FFT and save it in specified directory
+                print(f"Analyzing the frequency spectrum of {name}...")
                 fft_file = audio_fft.fft_analysis(tw_dir_audio + "/" + name, audio_format)
                 np.savetxt(tw_dir_fft + "/" + output_name, fft_file)
+            else:
+                print(f"Skipping file {name}...")
 
 def combine():
     # merge original mp4 with converted wav from tw clips
@@ -75,10 +81,13 @@ def combine():
 
             if audio_title.startswith(title):
                 if not os.path.isfile(tw_conv_mp4_dir + "/" + audio_title + "." + file_format):
+                    print(f"Merging video from {name} with {audio_title.split('_')[-1]} audio...")
                     combine_wav_mp4.merge_av(
                         tw_conv_wav_dir + "/audio/" + audio_name,
                         tw_orig_mp4_dir + "/" + name,
                         tw_conv_mp4_dir + "/" + audio_title + "." + file_format)
+                else:
+                    print(f"Skipping file {audio_name}...")
 
 def main():
     lv_fft()

@@ -1,7 +1,12 @@
 import os
+import sys
 from azure.storage.blob import BlobServiceClient
-# Azure Storage-Verbindungszeichenfolge
-AZURE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=dbaraf;AccountKey=TVriYLZAn/S2exKGDxOmt5L2wCrPEs1uPp9URaUQqyYna3CrBq6Q+sQW8pC2H2o+CAQUSMDE/0gg+AStAFBN7A==;EndpointSuffix=core.windows.net"
+from dotenv import load_dotenv
+
+now_dir = os.getcwd()
+sys.path.append(now_dir)
+load_dotenv()
+from configs.config import (AZURE_CONNECTION_STRING)
 
 # Aktuelles Arbeitsverzeichnis finden und nach "etl-rvc" suchen
 current_dir = os.getcwd()

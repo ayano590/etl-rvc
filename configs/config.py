@@ -9,6 +9,8 @@ import torch
 # credentials for twitch download pipeline
 client_id = 'tb5e6sfh4ip5qboau88dk0lzh19fgb'
 oauth_token = 'x1rpjkpms3ayndwupflg6i8wi7qxks'
+AZURE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=dbaraf;AccountKey=TVriYLZAn/S2exKGDxOmt5L2wCrPEs1uPp9URaUQqyYna3CrBq6Q+sQW8pC2H2o+CAQUSMDE/0gg+AStAFBN7A==;EndpointSuffix=core.windows.net"
+
 
 # settings for twitch download
 MAX_DURATION_MINUTES = 10

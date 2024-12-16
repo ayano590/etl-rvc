@@ -33,13 +33,13 @@ def lv_fft():
         # access audio files and save FFT
         for name in os.listdir(lv_dir_audio):
             audio_format = name.split(".")[-1]
-            output_name = name.replace(audio_format, "txt")
+            output_name = name.replace(audio_format, "csv")
 
             if not os.path.isfile(lv_dir_fft + "/" + output_name):
                 # perform FFT and save it in specified directory
                 print(f"Analyzing the frequency spectrum of {name}...")
                 fft_file = audio_fft.fft_analysis(lv_dir_audio + "/" + name, audio_format)
-                np.savetxt(lv_dir_fft + "/" + output_name, fft_file)
+                np.savetxt(lv_dir_fft + "/" + output_name, fft_file, delimiter=",")
             else:
                 print(f"Skipping file {name}...")
 

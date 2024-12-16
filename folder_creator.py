@@ -12,7 +12,10 @@ folder_paths = [
     "audios/tw_clips_original_wav/fft",
     "audios/tw_clips_converted_wav/audio",
     "audios/tw_clips_converted_wav/fft",
-    "audios/twitch_user_request_mp4"
+    "audios/twitch_user_request_mp4",
+    "audios/twitch_user_request_wav",
+    "audios/twitch_user_converted_mp4",
+    "audios/twitch_user_converted_wav"
 ]
 
 def find_base_directory(directory_name):

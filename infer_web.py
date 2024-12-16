@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 load_dotenv()
+
+import pandas as pd
 from infer.modules.vc.modules import VC
 from infer.modules.uvr5.modules import uvr
 from infer.lib.train.process_ckpt import (
@@ -31,6 +33,7 @@ import traceback
 import threading
 import shutil
 import logging
+from api import twitch_user_request
 
 
 logging.getLogger("numba").setLevel(logging.WARNING)
@@ -780,17 +783,28 @@ def change_f0_method(f0method8):
     return {"visible": visible, "__type__": "update"}
 
 
+def update_twitch_radio_options(dataframe):
+    # Extract new radio options based on the dataframe (e.g., row values or column values)
+    new_options = [f"{row[0]}, duration: {row[1]}" for row in dataframe.itertuples(index=False)]
+
+    # initialize radio buttons
+    if new_options[0] == ", duration: ":
+        return gr.update(choices=[""])
+    return gr.update(choices=new_options)
+
 # Web UI
 with gr.Blocks(title="VO.CODER") as app:
     gr.Markdown("## VO.CODER")
     with gr.Tabs():
-        with gr.TabItem("Twitch Abfrage"):
+        with gr.TabItem("Twitch User Request"):
+
             with gr.Row():
                 streamer_name = gr.Textbox(
                                 label="Enter streamer name:",
                                 placeholder="Olaf Piltz",
                 )
                 streamer_search = gr.Button("Search", variant="secondary")
+
             with gr.Row():
                 streamer_clips = gr.Radio(
                         label="Select clip:",
@@ -799,23 +813,43 @@ with gr.Blocks(title="VO.CODER") as app:
                         interactive=True,
                     )
                 download_btn = gr.Button("Download", variant="primary")
-            download_btn.click(
-                xxx9,
-                [],
-                [streamer_name, streamer_name],
-                api_name="twitch_user",
+
+            with gr.Row():
+                tw_user_output = gr.Textbox(label="Output information")
+
+            # store the relevant clip data in a temporary, invisible "cache"
+            vid_selection = gr.Dataframe(visible=False)
+
+            # update radio buttons
+            streamer_search.click(
+                twitch_user_request.get_videos,
+                streamer_name,
+                [vid_selection, tw_user_output]
             )
+            vid_selection.change(
+                update_twitch_radio_options,
+                vid_selection,
+                streamer_clips
+            )
+
+            # download clip
+            download_btn.click(
+                twitch_user_request.download_clip,
+                [streamer_clips, vid_selection],
+                tw_user_output
+            )
+
         with gr.TabItem("Model Inference"):
             with gr.Row():
-                sid0 = gr.Dropdown(label=i18n("推理音色"), choices=sorted(names))
+                sid0 = gr.Dropdown(label="Inferencing voice", choices=sorted(names))
                 with gr.Column():
-                    refresh_button = gr.Button(i18n("刷新音色列表和索引路径"), variant="primary")
-                    clean_button = gr.Button(i18n("卸载音色省显存"), variant="primary")
+                    refresh_button = gr.Button("Refresh voice list and index path", variant="primary")
+                    clean_button = gr.Button("Unload voice to save GPU memory", variant="primary")
                 spk_item = gr.Slider(
                     minimum=0,
                     maximum=2333,
                     step=1,
-                    label=i18n("请选择说话人id"),
+                    label=i18n("Select speaker ID"),
                     value=0,
                     visible=False,
                     interactive=True,
@@ -823,7 +857,7 @@ with gr.Blocks(title="VO.CODER") as app:
                 clean_button.click(
                     fn=clean, inputs=[], outputs=[sid0], api_name="infer_clean"
                 )
-            with gr.TabItem(i18n("单次推理")):
+            with gr.TabItem("Single Inference"):
                 with gr.Group():
                     with gr.Row():
                         with gr.Column():
@@ -832,7 +866,7 @@ with gr.Blocks(title="VO.CODER") as app:
                             )
                             input_audio0 = gr.Textbox(
                                 label=i18n("输入待处理音频文件路径(默认是正确格式示例)"),
-                                placeholder="C:\\Users\\Desktop\\audio_example.wav",
+                                value= os.getenv("twitch_request_dir") + "/video.mp4",
                             )
                             file_index1 = gr.Textbox(
                                 label=i18n("特征检索库文件路径,为空则使用下拉的选择结果"),
@@ -911,11 +945,15 @@ with gr.Blocks(title="VO.CODER") as app:
                             )
                 with gr.Group():
                     with gr.Column():
-                        but0 = gr.Button(i18n("转换"), variant="primary")
                         with gr.Row():
-                            vc_output1 = gr.Textbox(label=i18n("输出信息"))
-                            vc_output2 = gr.Audio(label=i18n("输出音频(右下角三个点,点了可以下载)"))
-
+                            but0 = gr.Button("Process", variant="secondary")
+                            but00 = gr.Button("Convert", variant="secondary")
+                            but000 = gr.Button("Upload", variant="primary")
+                            
+                        with gr.Row():
+                            vc_output1 = gr.Textbox(label="Output information")
+                            vc_output2 = gr.Audio(label="Output audio")
+                            
                         but0.click(
                             vc.vc_single,
                             [
@@ -935,6 +973,17 @@ with gr.Blocks(title="VO.CODER") as app:
                             [vc_output1, vc_output2],
                             api_name="infer_convert",
                         )
+                        but00.click(
+                            twitch_user_request.save_merge_fft,
+                            vc_output2,
+                            vc_output1
+                        )
+                        but000.click(
+                            twitch_user_request.upload_clip,
+                            [],
+                            []
+                        )
+
             with gr.TabItem(i18n("批量推理")):
                 gr.Markdown(
                     value=i18n("批量转换, 输入待转换音频文件夹, 或上传多个音频文件, 在指定文件夹(默认opt)下输出转换的音频. ")

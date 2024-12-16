@@ -1,5 +1,4 @@
 import requests
-# import subprocess
 import os
 import sys
 from dotenv import load_dotenv
@@ -8,9 +7,17 @@ now_dir = os.getcwd()
 sys.path.append(now_dir)
 load_dotenv()
 
+import numpy as np
+import pandas as pd
+from scipy.io.wavfile import write
+from collections.abc import Generator
 from azure.storage.blob import BlobServiceClient
 from yt_dlp import YoutubeDL
-from configs.config import client_id, oauth_token, AZURE_CONNECTION_STRING
+from configs.config import (client_id,
+                            oauth_token,
+                            NUM_SEARCH_VIDEOS,
+                            AZURE_CONNECTION_STRING)
+from staging import audio_fft, combine_wav_mp4, extract_wav
 
 
 def get_data_from_url(url: str):
@@ -26,80 +33,136 @@ def get_data_from_url(url: str):
 
 def get_videos(streamer_name: str) -> tuple:
 
-    error_list = ["ERROR", "", "", "", ""], "ERROR"
+    MAX_DURATION_MINUTES = 5
+    MIN_DURATION_MINUTES = 2
+
+    error_tup = ["ERROR", "", "", "", ""], "ERROR"
 
     # Benutzer-ID abrufen
     user_data = get_data_from_url(f'https://api.twitch.tv/helix/users?login={streamer_name}')
-    if not user_data['data']:
-        return error_list
+    if not user_data or not user_data['data']:
+        return error_tup
 
     user_id = user_data['data'][0]['id']
     streamer_display_name = user_data['data'][0]['display_name']
 
     # Videos des Streamers abrufen
-    videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first=40')
-    if not videos_data['data']:
-        return error_list
+    videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first={NUM_SEARCH_VIDEOS}')
+    if not videos_data or not videos_data['data']:
+        return error_tup
 
-    # Videos anzeigen
     video_choices = []
 
-    for _, video in enumerate(videos_data['data'], start=1):
+    for video in videos_data['data']:
+
         title = video['title']
         url = video['url']
         duration = video['duration']
-        video_key = url.split("/")[-1]
-        published_at = video.get('published_at', 'N/A')
 
-        video_choices.append((title, url, video_key, duration, published_at))
+        # Video-Dauer in Minuten konvertieren
+        duration_parts = [int(x) for x in duration.replace("h", ":").replace("m", ":").replace("s", "").split(":")]
+        total_minutes = sum(x * 60 ** i for i, x in enumerate(reversed(duration_parts))) / 60
 
-    return video_choices, streamer_display_name
+        # Video überspringen, wenn es zu lang oder zu kurz ist
+        if total_minutes > MAX_DURATION_MINUTES or total_minutes < MIN_DURATION_MINUTES:
+            continue
 
-def get_clips(video_choices: list) -> list:
-    
-    return [f"{i[0]}, Dauer: {i[3]}" for i in video_choices]
+        video_choices.append((title, duration, url))
 
-def download_clip(num: int, video_choices: list, streamer_display_name: str) -> str:
+        if len(video_choices) == 5:
+            break
 
-    selected_video = video_choices[num]
-    video_title, video_url, video_key, video_duration, video_published_at = selected_video
+    return video_choices, f"Successfully found clips from {streamer_display_name}!"
+
+def download_clip(num, video_choices: list) -> str:
+
+    selected_video = video_choices.iloc[int(num) - 1].to_list()
+    _, _, video_url = selected_video
 
     # Zielordner definieren
     output_folder = os.getenv("twitch_request_dir")
     os.makedirs(output_folder, exist_ok=True)
 
     # Dateiname erstellen
-    sanitized_title = "".join(c if c.isalnum() or c in (" ", "-", "_") else "_" for c in video_title)
-    sanitized_published_at = video_published_at.replace(":", "-").replace("T", "_").replace("Z", "")
-    output_filename = f"{video_key}_{streamer_display_name}_{video_duration.replace(':', '-')}_{sanitized_published_at}.mp4"
+    output_filename = "video.mp4"
 
-    # Prüfen auf fehlende Daten
-    if not all([video_key, sanitized_title, sanitized_published_at]):
-        output_filename = f"INCOM_{output_filename}"
+    output_path = output_folder + "/" + output_filename
 
-    output_path = os.path.join(output_folder, output_filename)
-
-    # Pfad zu ffmpeg festlegen (angenommen, es befindet sich im übergeordneten Verzeichnis)
-    ffmpeg_path = os.path.join(os.getcwd(), 'ffmpeg', 'ffmpeg.exe')  # Beispiel: ffmpeg liegt in einem Ordner 'ffmpeg' über dem aktuellen Verzeichnis
+    # Specify the path to ffmpeg
+    ffmpeg_path = os.path.join(os.getcwd(), 'ffmpeg.exe')
 
     if os.path.isfile(output_path):
-        return "Twitch Clip bereits heruntergeladen."
+        return "The clip already exists in the staging area."
 
     try:
         # Configure yt-dlp options
         ydl_opts = {
-            'ffmpeg_location': ffmpeg_path,  # Specify the path to ffmpeg
-            'outtmpl': output_path,          # Output template for downloaded video
+            'ffmpeg_location': ffmpeg_path,
+            'outtmpl': output_path,
         }
         
         # Use yt-dlp as a library
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([video_url])
 
-        return f"Video erfolgreich heruntergeladen und gespeichert in: {output_path}"
+        return f"Successfully downloaded the file in {output_path}"
 
     except Exception as e:
-        return f"Fehler beim Herunterladen: {e}"
+        return f"ERROR: Download failed, {e}"
 
-def upload_clip():
-    pass
+def save_merge_fft(audio: list) -> Generator[str, None, None]:
+
+    sample_rate, audio_data = audio[0], audio[1]
+
+    output_folder = os.getenv("twitch_conv_dir2")
+
+    output_path = output_folder + "/converted_audio.wav"
+
+    write(output_path, sample_rate, audio_data)
+    
+    yield "Successfully saved the audio file!"
+
+    video_path = os.getenv("twitch_request_dir") + "/video.mp4"
+
+    audio_path_conv, output_path = output_path, os.getenv("twitch_conv_dir") + "/converted_video.mp4"
+
+    combine_wav_mp4.merge_av(audio_path_conv, video_path, output_path)
+
+    audio_path_orig = os.getenv("twitch_request_dir2") + "/audio.wav"
+
+    extract_wav.extract(video_path, audio_path_orig)
+
+    yield "Successfully extracted original audio!"
+    yield "Successfully merged original video with converted audio!"
+
+    fft_file_orig = audio_fft.fft_analysis(audio_path_orig, "wav")
+    np.savetxt(audio_path_orig, fft_file_orig, delimiter=",")
+
+    fft_file_conv = audio_fft.fft_analysis(audio_path_conv, "wav")
+    np.savetxt(audio_path_conv, fft_file_conv, delimiter=",")
+
+    yield "Successfully analyzed the frequency spectrum!"
+
+def upload_clip() -> str:
+
+    blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
+
+    twitch_conv_dir = os.getenv("twitch_conv_dir")
+
+    container_client = blob_service_client.get_container_client("pres")
+
+    local_file_path = twitch_conv_dir + "/converted_video.mp4"
+    blob_path = os.path.relpath(local_file_path, "pres").replace("\\", "/")  # Relativer Pfad als Blob-Name
+    blob_client = container_client.get_blob_client(blob_path)
+
+    blob_properties = blob_client.get_blob_properties()
+    blob_size = blob_properties.size
+    local_file_size = os.path.getsize(local_file_path)
+
+    if blob_size == local_file_size:
+        return f"Datei '{blob_path}' ist bereits vorhanden und identisch. Überspringe Upload."
+
+    # Datei hochladen
+    with open(local_file_path, "rb") as data:
+        blob_client.upload_blob(data, overwrite=True)
+        return f"Datei '{blob_path}' wurde in den Container 'pres' hochgeladen."

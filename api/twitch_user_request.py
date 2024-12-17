@@ -18,6 +18,7 @@ from configs.config import (client_id,
                             NUM_SEARCH_VIDEOS,
                             AZURE_CONNECTION_STRING)
 from staging import audio_fft, combine_wav_mp4, extract_wav
+from api.db_azure_con import upload_files_to_container
 
 
 def get_data_from_url(url: str):
@@ -115,6 +116,7 @@ def save_merge_fft(audio: list) -> Generator[str, None, None]:
     sample_rate, audio_data = audio[0], audio[1]
 
     output_folder = os.getenv("twitch_conv_dir2")
+    os.makedirs(output_folder, exist_ok=True)
 
     output_path = output_folder + "/converted_audio.wav"
 
@@ -125,10 +127,12 @@ def save_merge_fft(audio: list) -> Generator[str, None, None]:
     video_path = os.getenv("twitch_request_dir") + "/video.mp4"
 
     audio_path_conv, output_path = output_path, os.getenv("twitch_conv_dir") + "/converted_video.mp4"
+    os.makedirs(os.getenv("twitch_conv_dir"), exist_ok=True)
 
     combine_wav_mp4.merge_av(audio_path_conv, video_path, output_path)
 
     audio_path_orig = os.getenv("twitch_request_dir2") + "/audio.wav"
+    os.makedirs(os.getenv("twitch_request_dir2"), exist_ok=True)
 
     extract_wav.extract(video_path, audio_path_orig)
 
@@ -147,22 +151,16 @@ def upload_clip() -> str:
 
     blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
 
-    twitch_conv_dir = os.getenv("twitch_conv_dir")
+    CONTAINER_MAPPING = {
+    "pres": [
+        os.getenv("twitch_request_dir"),
+        os.getenv("twitch_request_dir2"),
+        os.getenv("twitch_conv_dir"),
+        os.getenv("twitch_conv_dir2")
+    ]
+}
 
-    container_client = blob_service_client.get_container_client("pres")
-
-    local_file_path = twitch_conv_dir + "/converted_video.mp4"
-    blob_path = os.path.relpath(local_file_path, "pres").replace("\\", "/")  # Relativer Pfad als Blob-Name
-    blob_client = container_client.get_blob_client(blob_path)
-
-    blob_properties = blob_client.get_blob_properties()
-    blob_size = blob_properties.size
-    local_file_size = os.path.getsize(local_file_path)
-
-    if blob_size == local_file_size:
-        return f"Datei '{blob_path}' ist bereits vorhanden und identisch. Überspringe Upload."
-
-    # Datei hochladen
-    with open(local_file_path, "rb") as data:
-        blob_client.upload_blob(data, overwrite=True)
-        return f"Datei '{blob_path}' wurde in den Container 'pres' hochgeladen."
+    for container_name, local_folders in CONTAINER_MAPPING.items():
+        print(f"Starting upload of files into container: {container_name}")
+        upload_files_to_container(container_name, local_folders, blob_service_client)
+        print(f"Successfully uploaded files into container: {container_name}\n")

@@ -147,17 +147,6 @@ for name in os.listdir(weight_uvr5_root):
     if name.endswith(".pth") or "onnx" in name:
         uvr5_names.append(name.replace(".pth", ""))
 
-xxx10 = "Not loaded"
-
-new_choices = ["x", "y"]
-
-
-def xxx11():
-    return gr.Radio.update(choices=new_choices, value=new_choices[0])
-
-def xxx9():
-    xxx10 = "Successfully downloaded"
-    return xxx10, xxx11()
 
 def change_choices():
     names = []
@@ -953,7 +942,7 @@ with gr.Blocks(title="VO.CODER") as app:
                         with gr.Row():
                             vc_output1 = gr.Textbox(label="Output information")
                             vc_output2 = gr.Audio(label="Output audio")
-                            
+
                         but0.click(
                             vc.vc_single,
                             [
@@ -981,7 +970,7 @@ with gr.Blocks(title="VO.CODER") as app:
                         but000.click(
                             twitch_user_request.upload_clip,
                             [],
-                            []
+                            vc_output1
                         )
 
             with gr.TabItem(i18n("批量推理")):

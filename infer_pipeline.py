@@ -252,8 +252,11 @@ def tw_infer():
 
             write(output_path, sample_rate, audio_out)
 
-
-if __name__ == "__main__":
+def main():
     tw_orig_extract_wav()
     lv_infer()
     tw_infer()
+
+
+if __name__ == "__main__":
+    main()

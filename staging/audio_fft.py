@@ -8,7 +8,6 @@ load_dotenv()
 
 from pydub import AudioSegment
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
 def fft_analysis(audio_file, audio_format):
@@ -44,13 +43,17 @@ def fft_analysis(audio_file, audio_format):
     interp_magnitude_db = interp1d(frequencies, magnitude_db, kind="linear", bounds_error=False, fill_value="extrapolate")
     log_magnitude_db = interp_magnitude_db(log_freqs)
 
-    # # Step 6: Plot the frequency spectrum
-    # plt.figure(figsize=(12, 6))
-    # plt.semilogx(log_freqs, log_magnitude_db)
-    # plt.title("Frequency Spectrum (Logarithmic Frequency and Amplitude)")
-    # plt.xlabel("Frequency (Hz)")
-    # plt.ylabel("Amplitude (dB)")
-    # plt.grid(which="both", linestyle="--", linewidth=0.5)
-    # plt.show()
+    # Step 6: Normalize magnitude to ensure average between 0-2 kHz is 30 dB
+    # Select the first 392 points (indices 0 to 391) which correspond to the 0-2 kHz range in the log frequency grid
+    idx_0_2kHz = np.arange(0, 392)  # Indices from 0 to 391
+
+    # Calculate the average magnitude in dB between 0 and 2 kHz
+    avg_0_2kHz = np.mean(log_magnitude_db[idx_0_2kHz])
+
+    # Calculate the scaling factor to achieve an average of 30 dB in the 0-2 kHz range
+    scaling_factor = 30 - avg_0_2kHz
+
+    # Apply scaling factor to all magnitude values
+    log_magnitude_db += scaling_factor
 
     return np.column_stack((log_freqs, log_magnitude_db))

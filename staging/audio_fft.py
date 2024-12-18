@@ -63,6 +63,7 @@ def fft_analysis(audio_file, audio_format):
 
     # Apply scaling factor to all magnitude values
     downsampled_magnitude_db += scaling_factor
+    downsampled_magnitude_db += scaling_factor
 
     # Return the downsampled result
     return np.column_stack((downsampled_frequencies, downsampled_magnitude_db))

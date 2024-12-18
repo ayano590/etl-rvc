@@ -37,25 +37,25 @@ def fft_analysis(audio_file, audio_format):
     # Convert amplitude to decibels
     magnitude_db = 20 * np.log10(magnitude + 1e-10)  # Avoid log(0) by adding a small value
 
-    # Step 4: Determine the total number of frequency bins
-    total_frequencies = len(frequencies)
+    # Step 4: Calculate the index corresponding to 2 kHz
+    step_size = sample_rate / len(audio_data)
+    idx_2kHz = int(2000 / step_size)  # Index corresponding to 2 kHz
 
-    # Step 5: Calculate the index corresponding to 2 kHz
-    idx_2kHz = int(2000 / (sample_rate / len(audio_data)))  # Index corresponding to 2 kHz
+    # Step 5: Cut the frequency range to 0-2 kHz
+    frequencies_cut = frequencies[:idx_2kHz + 1]
+    magnitude_db_cut = magnitude_db[:idx_2kHz + 1]
 
-    # Step 6: Normalize magnitude to ensure average between 0-2 kHz is 30 dB
-    idx_0_2kHz = np.arange(0, min(idx_2kHz, total_frequencies))  # Indices from 0 to idx_2kHz
-    selected_frequencies = frequencies[idx_0_2kHz]
-    selected_magnitude_db = magnitude_db[idx_0_2kHz]
+    # Step 6: Downsample to ensure no more than `max_rows` entries
+    total_frequencies = len(frequencies_cut)
 
     # Calculate the step size needed to return at most `max_rows` points
-    desired_step = max(1, selected_frequencies // max_rows)
+    desired_step = max(1, total_frequencies // max_rows)
 
     # Select every `desired_step`-th frequency and magnitude to limit the number of rows
-    downsampled_frequencies = selected_frequencies[::desired_step]
-    downsampled_magnitude_db = selected_magnitude_db[::desired_step]
+    downsampled_frequencies = frequencies_cut[::desired_step]
+    downsampled_magnitude_db = magnitude_db_cut[::desired_step]
 
-    # Calculate the average magnitude in dB between 0 and 2 kHz
+    # Step 7: Calculate the average magnitude in dB between 0 and 2 kHz
     avg_0_2kHz = np.mean(downsampled_magnitude_db)
 
     # Calculate the scaling factor to achieve an average of 30 dB in the 0-2 kHz range
@@ -64,4 +64,5 @@ def fft_analysis(audio_file, audio_format):
     # Apply scaling factor to all magnitude values
     downsampled_magnitude_db += scaling_factor
 
+    # Return the downsampled result
     return np.column_stack((downsampled_frequencies, downsampled_magnitude_db))

@@ -2,8 +2,9 @@ import requests
 import subprocess
 import os
 import sys
-from config_tw import client_id, oauth_token
-
+#from config_tw import client_id, oauth_tokenlulu
+client_id = 'tb5e6sfh4ip5qboau88dk0lzh19fgb'
+oauth_token = 'x1rpjkpms3ayndwupflg6i8wi7qxks'
 # from dotenv import load_dotenv
 # now_dir = os.getcwd()
 # sys.path.append(now_dir)
@@ -35,7 +36,7 @@ user_id = user_data['data'][0]['id']
 streamer_display_name = user_data['data'][0]['display_name']
 
 # Videos des Streamers abrufen
-videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first=40')
+videos_data = get_data_from_url(f'https://api.twitch.tv/helix/videos?user_id={user_id}&first=100')
 if not videos_data['data']:
     print(f"Keine Videos für den Streamer '{streamer_display_name}' gefunden.")
     exit()
@@ -69,7 +70,7 @@ selected_video = video_choices[choice - 1]
 video_title, video_url, video_key, video_duration, video_published_at = selected_video
 
 # Zielordner definieren
-output_folder = "downloads/twitch_clips"
+output_folder = "twitch_clips"
 os.makedirs(output_folder, exist_ok=True)
 
 # Dateiname erstellen

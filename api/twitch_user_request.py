@@ -34,8 +34,8 @@ def get_data_from_url(url: str):
 
 def get_videos(streamer_name: str) -> tuple:
 
-    MAX_DURATION_MINUTES = 5
-    MIN_DURATION_MINUTES = 2
+    MAX_DURATION_MINUTES = 2
+    MIN_DURATION_MINUTES = 1
 
     error_tup = ["ERROR", "", "", "", ""], "ERROR"
 

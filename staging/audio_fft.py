@@ -57,11 +57,14 @@ def fft_analysis(audio_file, audio_format):
 
     # Calculate the average magnitude in dB between 0 and 2 kHz
     avg_0_2kHz = np.mean(downsampled_magnitude_db)
+    avg_0_2kHz = np.mean(downsampled_magnitude_db)
 
     # Calculate the scaling factor to achieve an average of 30 dB in the 0-2 kHz range
     scaling_factor = 30 - avg_0_2kHz
 
     # Apply scaling factor to all magnitude values
     downsampled_magnitude_db += scaling_factor
+    downsampled_magnitude_db += scaling_factor
 
+    return np.column_stack((downsampled_frequencies, downsampled_magnitude_db))
     return np.column_stack((downsampled_frequencies, downsampled_magnitude_db))

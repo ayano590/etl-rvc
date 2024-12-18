@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 load_dotenv()
-from configs.config import (AZURE_CONNECTION_STRING)
 
 # Aktuelles Arbeitsverzeichnis finden und nach "etl-rvc" suchen
 current_dir = os.getcwd()
@@ -20,26 +19,6 @@ if os.path.basename(current_dir) == "etl-rvc":
     print(f"Das Arbeitsverzeichnis 'etl-rvc' wurde gefunden: {current_dir}")
 else:
     raise RuntimeError("Das Hauptverzeichnis 'etl-rvc' konnte nicht gefunden werden.")
-
-# Lokale Ordner und zugehörige Container (relativ zum Arbeitsverzeichnis)
-CONTAINER_MAPPING = {
-    "lv-c-c": [
-        os.path.join(current_dir, "audios", "lv_clips_converted", "audio"),
-        os.path.join(current_dir, "audios", "lv_clips_converted", "fft")
-    ],
-    "lv-c-o": [
-        os.path.join(current_dir, "audios", "lv_clips_original", "audio"),
-        os.path.join(current_dir, "audios", "lv_clips_original", "fft")
-    ],
-    "tw-c-c": [
-        os.path.join(current_dir, "audios", "tw_clips_converted_mp4"),
-        os.path.join(current_dir, "audios", "tw_clips_converted_wav", "fft")
-    ],
-    "tw-c-o": [
-        os.path.join(current_dir, "audios", "tw_clips_original_wav", "audio"),
-        os.path.join(current_dir, "audios", "tw_clips_original_wav", "fft")
-    ]
-}
 
 # Funktion: Dateien von lokalen Ordnern in Container kopieren
 def upload_files_to_container(container_name, local_folders, blob_service_client):
@@ -79,8 +58,31 @@ def upload_files_to_container(container_name, local_folders, blob_service_client
 
 # Hauptfunktion
 def main():
+
+    from configs.config import AZURE_CONNECTION_STRING
+
     # Verbindung zum Blob Service herstellen
     blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
+
+    # Lokale Ordner und zugehörige Container (relativ zum Arbeitsverzeichnis)
+    CONTAINER_MAPPING = {
+        "lv-c-c": [
+            os.path.join(current_dir, "audios", "lv_clips_converted", "audio"),
+            os.path.join(current_dir, "audios", "lv_clips_converted", "fft")
+        ],
+        "lv-c-o": [
+            os.path.join(current_dir, "audios", "lv_clips_original", "audio"),
+            os.path.join(current_dir, "audios", "lv_clips_original", "fft")
+        ],
+        "tw-c-c": [
+            os.path.join(current_dir, "audios", "tw_clips_converted_mp4"),
+            os.path.join(current_dir, "audios", "tw_clips_converted_wav", "fft")
+        ],
+        "tw-c-o": [
+            os.path.join(current_dir, "audios", "tw_clips_original_wav", "audio"),
+            os.path.join(current_dir, "audios", "tw_clips_original_wav", "fft")
+        ]
+    }
 
     # Für jeden Container die zugehörigen Dateien hochladen
     for container_name, local_folders in CONTAINER_MAPPING.items():

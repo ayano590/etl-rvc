@@ -14,7 +14,7 @@ AZURE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=dbaraf;Acc
 
 # settings for twitch download
 MAX_DURATION_MINUTES = 10
-MIN_DURATION_MINUTES = 5
+MIN_DURATION_MINUTES = 2
 MAX_VIDEOS_PER_STREAMER = 3
 NUM_SEARCH_VIDEOS = 100
 

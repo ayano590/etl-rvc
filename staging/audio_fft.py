@@ -43,8 +43,12 @@ def fft_analysis(audio_file, audio_format):
     # Select indices from 0 to the index corresponding to 2 kHz
     idx_0_2kHz = np.arange(0, idx_2kHz + 1)  # Indices from 0 to idx_2kHz
 
+    # Step 6: cut data above 2 kHz
+    frequencies = frequencies[idx_0_2kHz]
+    magnitude_db = magnitude_db[idx_0_2kHz]
+
     # Calculate the average magnitude in dB between 0 and 2 kHz
-    avg_0_2kHz = np.mean(magnitude_db[idx_0_2kHz])
+    avg_0_2kHz = np.mean(magnitude_db)
 
     # Calculate the scaling factor to achieve an average of 30 dB in the 0-2 kHz range
     scaling_factor = 30 - avg_0_2kHz

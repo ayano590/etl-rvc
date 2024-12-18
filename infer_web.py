@@ -838,7 +838,7 @@ with gr.Blocks(title="VO.CODER") as app:
                     minimum=0,
                     maximum=2333,
                     step=1,
-                    label=i18n("Select speaker ID"),
+                    label="Select speaker ID",
                     value=0,
                     visible=False,
                     interactive=True,
@@ -935,8 +935,8 @@ with gr.Blocks(title="VO.CODER") as app:
                 with gr.Group():
                     with gr.Column():
                         with gr.Row():
-                            but0 = gr.Button("Process", variant="secondary")
-                            but00 = gr.Button("Convert", variant="secondary")
+                            but0 = gr.Button("Convert", variant="secondary")
+                            but00 = gr.Button("Extract/Merge/FFT", variant="secondary")
                             but000 = gr.Button("Upload", variant="primary")
                             
                         with gr.Row():

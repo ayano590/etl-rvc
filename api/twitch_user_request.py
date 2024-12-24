@@ -37,7 +37,7 @@ def get_videos(streamer_name: str) -> tuple:
     MAX_DURATION_MINUTES = 2
     MIN_DURATION_MINUTES = 1
 
-    error_tup = ["ERROR", "", "", "", ""], "ERROR"
+    error_tup = [], None
 
     # Benutzer-ID abrufen
     user_data = get_data_from_url(f'https://api.twitch.tv/helix/users?login={streamer_name}')
@@ -53,6 +53,7 @@ def get_videos(streamer_name: str) -> tuple:
         return error_tup
 
     video_choices = []
+    count = 0
 
     for video in videos_data['data']:
 
@@ -68,16 +69,17 @@ def get_videos(streamer_name: str) -> tuple:
         if total_minutes > MAX_DURATION_MINUTES or total_minutes < MIN_DURATION_MINUTES:
             continue
 
-        video_choices.append((title, duration, url))
+        count += 1
+        video_choices.append((f"{count}: {title}", duration, url))
 
         if len(video_choices) == 5:
             break
 
     return video_choices, f"Successfully found clips from {streamer_display_name}!"
 
-def download_clip(num, video_choices: list) -> str:
+def download_clip(title_with_num: str, video_choices: list) -> str:
 
-    selected_video = video_choices.iloc[int(num) - 1].to_list()
+    selected_video = video_choices.iloc[int(title_with_num.split(":")[0]) - 1].to_list()
     _, _, video_url = selected_video
 
     # Zielordner definieren

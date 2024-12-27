@@ -142,10 +142,10 @@ def save_merge_fft(audio: list) -> Generator[str, None, None]:
     yield "Successfully merged original video with converted audio!"
 
     fft_file_orig = audio_fft.fft_analysis(audio_path_orig, "wav")
-    np.savetxt(audio_path_orig, fft_file_orig, delimiter=",")
+    np.savetxt(audio_path_orig.replace(".wav", ".csv"), fft_file_orig, delimiter=",")
 
     fft_file_conv = audio_fft.fft_analysis(audio_path_conv, "wav")
-    np.savetxt(audio_path_conv, fft_file_conv, delimiter=",")
+    np.savetxt(audio_path_conv.replace(".wav", ".csv"), fft_file_conv, delimiter=",")
 
     yield "Successfully analyzed the frequency spectrum!"
 

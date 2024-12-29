@@ -10,12 +10,15 @@ services:
       - .:/etl-rvc
     ports:
       - 7865:7865
+
     # for PySimpleGUI, but realtime inference not supported yet in Docker container
     # environment:
     #   - DISPLAY=YOUR.IP.ADDRESS:0.0
+
     # useful for debugging or multi stage builds
     # tty: true  # if set to true, Docker container does not terminate without CMD
     # command: python infer_web.py  # if you want to build the Docker image without CMD
+
     # only uncomment code below if you have an NVIDIA GPU compatible with CUDA
     deploy:
       resources:

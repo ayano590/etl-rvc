@@ -3,18 +3,24 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # use Docker image if already built and comment out build above
+    # image: your-image-name
     container_name: rvc
     volumes:
-      - ./weights:/app/assets/weights
-      - ./opt:/app/opt
-      - ./dataset:/app/dataset # you can use this folder in order to provide your dataset for model training
+      - .:/app
     ports:
       - 7865:7865
-    # only uncomment code below if you have an nvidia gpu compatible with cuda
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    # for PySimpleGUI, but realtime inference not supported yet in Docker container
+    # environment:
+    #   - DISPLAY=YOUR.IP.ADDRESS:0.0
+    # useful for debugging or multi stage builds
+    # tty: true  # if set to true, Docker container does not terminate without CMD
+    # command: python infer_web.py  # if you want to build the Docker image without CMD
+    # only uncomment code below if you have an NVIDIA GPU compatible with CUDA
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

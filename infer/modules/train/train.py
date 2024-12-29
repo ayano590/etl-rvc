@@ -29,9 +29,9 @@ try:
         GradScaler = gradscaler_init()
         ipex_init()
     else:
-        from torch.cuda.amp import GradScaler, autocast
+        from torch.amp import GradScaler, autocast
 except Exception:
-    from torch.cuda.amp import GradScaler, autocast
+    from torch.amp import GradScaler, autocast
 
 torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.benchmark = False
@@ -429,7 +429,7 @@ def train_and_evaluate(
             # wave_lengths = wave_lengths.cuda(rank, non_blocking=True)
 
         # Calculate
-        with autocast(enabled=hps.train.fp16_run):
+        with autocast(device_type="cuda", enabled=hps.train.fp16_run):
             if hps.if_f0 == 1:
                 (
                     y_hat,
@@ -457,7 +457,7 @@ def train_and_evaluate(
             y_mel = commons.slice_segments(
                 mel, ids_slice, hps.train.segment_size // hps.data.hop_length
             )
-            with autocast(enabled=False):
+            with autocast(device_type="cuda", enabled=False):
                 y_hat_mel = mel_spectrogram_torch(
                     y_hat.float().squeeze(1),
                     hps.data.filter_length,
@@ -476,7 +476,7 @@ def train_and_evaluate(
 
             # Discriminator
             y_d_hat_r, y_d_hat_g, _, _ = net_d(wave, y_hat.detach())
-            with autocast(enabled=False):
+            with autocast(device_type="cuda", enabled=False):
                 loss_disc, losses_disc_r, losses_disc_g = discriminator_loss(
                     y_d_hat_r, y_d_hat_g
                 )
@@ -486,10 +486,10 @@ def train_and_evaluate(
         grad_norm_d = commons.clip_grad_value_(net_d.parameters(), None)
         scaler.step(optim_d)
 
-        with autocast(enabled=hps.train.fp16_run):
+        with autocast(device_type="cuda", enabled=hps.train.fp16_run):
             # Generator
             y_d_hat_r, y_d_hat_g, fmap_r, fmap_g = net_d(wave, y_hat)
-            with autocast(enabled=False):
+            with autocast(device_type="cuda", enabled=False):
                 loss_mel = F.l1_loss(y_mel, y_hat_mel) * hps.train.c_mel
                 loss_kl = kl_loss(z_p, logs_q, m_p, logs_p, z_mask) * hps.train.c_kl
                 loss_fm = feature_loss(fmap_r, fmap_g)

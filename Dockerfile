@@ -1,49 +1,53 @@
-# syntax=docker/dockerfile:1
+# Use CUDA base image
+FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04
 
-FROM nvidia/cuda:11.6.2-cudnn8-runtime-ubuntu20.04
-
-EXPOSE 7865
-
+# Set working directory
 WORKDIR /app
 
-COPY . .
+# Set noninteractive mode and configure locale
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    LANGUAGE=en_US.UTF-8
 
-# Install dependenceis to add PPAs
+# Install dependencies and configure Python 3.9
 RUN apt-get update && \
-    apt-get install -y -qq ffmpeg aria2 && apt clean && \
-    apt-get install -y software-properties-common && \
+    apt-get install -y --no-install-recommends \
+        locales \
+        ffmpeg \
+        software-properties-common \
+        build-essential \
+        curl \
+        python3.9 \
+        python3.9-distutils \
+        python3.9-dev && \
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen && update-locale LANG=en_US.UTF-8 && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 && \
+    python3.9 -m pip install --no-cache-dir --upgrade pip==24.0 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Add the deadsnakes PPA to get Python 3.9
-RUN add-apt-repository ppa:deadsnakes/ppa
+# Copy requirements file
+COPY requirements-docker.txt /app/
 
-# Install Python 3.9 and pip
-RUN apt-get update && \
-    apt-get install -y build-essential python-dev python3-dev python3.9-distutils python3.9-dev python3.9 curl && \
-    apt-get clean && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
-    # using pip version 24.0 mitigates version conflicts
-    curl -O https://bootstrap.pypa.io/pip/zipapp/pip-24.0.pyz
+# Install Python dependencies
+RUN python -m pip install --no-cache-dir -r requirements-docker.txt
 
-# Set Python 3.9 as the default
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+# Optional: Build and install portaudio if needed
+# Uncomment if pyaudio is used
+# RUN apt-get update && \
+#     apt-get install -y --no-install-recommends libasound2-dev && \
+#     curl -O https://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz && \
+#     tar -xvzf pa_stable_v190700_20210406.tgz && \
+#     cd portaudio && ./configure && make && make install && cd .. && \
+#     rm -rf portaudio pa_stable_v190700_20210406.tgz && \
+#     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# instead of "python3 -m pip" since we have a .pyz file
-RUN python3 pip-24.0.pyz install --no-cache-dir -r requirements.txt
+# Expose the necessary port
+EXPOSE 7865
 
-RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/pretrained_v2/D40k.pth -d assets/pretrained_v2/ -o D40k.pth
-RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/pretrained_v2/G40k.pth -d assets/pretrained_v2/ -o G40k.pth
-RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/pretrained_v2/f0D40k.pth -d assets/pretrained_v2/ -o f0D40k.pth
-RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/pretrained_v2/f0G40k.pth -d assets/pretrained_v2/ -o f0G40k.pth
-
-RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/uvr5_weights/HP2-人声vocals+非人声instrumentals.pth -d assets/uvr5_weights/ -o HP2-人声vocals+非人声instrumentals.pth
-RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/uvr5_weights/HP5-主旋律人声vocals+其他instrumentals.pth -d assets/uvr5_weights/ -o HP5-主旋律人声vocals+其他instrumentals.pth
-
-RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt -d assets/hubert -o hubert_base.pt
-
-RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/rmvpe.pt -d assets/rmvpe -o rmvpe.pt
-
-VOLUME [ "/app/weights", "/app/opt" ]
-
-CMD ["python3", "infer-web.py"]
+# Define default command
+CMD ["python", "infer_web.py"]

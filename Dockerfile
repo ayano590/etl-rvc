@@ -2,7 +2,7 @@
 FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04
 
 # Set working directory
-WORKDIR /app
+WORKDIR /etl-rvc
 
 # Set noninteractive mode and configure locale
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -31,7 +31,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file
-COPY requirements-docker.txt /app/
+COPY requirements-docker.txt /etl-rvc/
 
 # Install Python dependencies
 RUN python -m pip install --no-cache-dir -r requirements-docker.txt

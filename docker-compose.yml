@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile
     # use Docker image if already built and comment out build above
     # image: your-image-name
-    container_name: rvc
+    container_name: rvc-container
     volumes:
-      - .:/app
+      - .:/etl-rvc
     ports:
       - 7865:7865
     # for PySimpleGUI, but realtime inference not supported yet in Docker container

@@ -51,6 +51,7 @@ os.environ["TEMP"] = tmp
 warnings.filterwarnings("ignore")
 torch.manual_seed(114514)
 
+os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
 
 config = Config()
 vc = VC(config)
